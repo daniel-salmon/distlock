@@ -1,5 +1,6 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
 
 import grpc
 
@@ -14,10 +15,17 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+lock = Lock()
+lock_store: dict[str, bool] = {}
+
+
 class Servicer(DistlockServicer):
     def CreateLock(
         self, request: CreateLockRequest, context: grpc.ServicerContext
     ) -> EmptyResponse:
+        with lock:
+            lock_store[request.name] = True
+        logger.info(f"Created lock named {request.name}")
         return EmptyResponse()
 
 
