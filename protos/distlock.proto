@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+
+package distlock;
+
+
+// A distributed lock service
+service Distlock {
+  // Creates a new lock on the server with the given name.
+  rpc CreateLock(CreateLockRequest) returns (EmptyResponse) {}
+}
+
+
+// The empty response.
+message EmptyResponse {}
+
+
+// The request message containing the name of the lock to create.
+message CreateLockRequest {
+  string name = 1;
+}
