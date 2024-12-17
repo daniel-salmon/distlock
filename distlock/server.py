@@ -16,18 +16,18 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-lock_store = LockStore()
-
-
 class Servicer(DistlockServicer):
+    def __init__(self):
+        self.lock_store = LockStore()
+
     def CreateLock(
         self, request: CreateLockRequest, context: grpc.ServicerContext
     ) -> EmptyResponse:
-        if request.key in lock_store:
+        if request.key in self.lock_store:
             context.set_details(f"A lock with the key {request.key} already exists")
             context.set_code(grpc.StatusCode.ALREADY_EXISTS)
             return EmptyResponse()
-        lock_store[request.key] = Lock()
+        self.lock_store[request.key] = Lock()
         logger.info(f"Created lock named {request.key}")
         return EmptyResponse()
 
