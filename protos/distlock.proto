@@ -6,7 +6,7 @@ package distlock;
 
 // A distributed lock service
 service Distlock {
-  // Creates a new lock on the server with the given name.
+  // Creates a new lock on the server with the given key.
   rpc CreateLock(CreateLockRequest) returns (EmptyResponse) {}
 }
 
@@ -15,7 +15,7 @@ service Distlock {
 message EmptyResponse {}
 
 
-// The request message containing the name of the lock to create.
+// The request message containing the key name of the lock to create.
 message CreateLockRequest {
   string key = 1;
 }

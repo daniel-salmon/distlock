@@ -49,7 +49,7 @@ class DistlockServicer(object):
     """A distributed lock service"""
 
     def CreateLock(self, request, context):
-        """Creates a new lock on the server with the given name."""
+        """Creates a new lock on the server with the given key."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
