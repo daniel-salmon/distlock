@@ -23,12 +23,12 @@ class Servicer(DistlockServicer):
     def CreateLock(
         self, request: CreateLockRequest, context: grpc.ServicerContext
     ) -> EmptyResponse:
-        if request.name in lock_store:
-            context.set_details(f"A lock with the name {request.name} already exists")
+        if request.key in lock_store:
+            context.set_details(f"A lock with the key {request.key} already exists")
             context.set_code(grpc.StatusCode.ALREADY_EXISTS)
             return EmptyResponse()
-        lock_store[request.name] = Lock()
-        logger.info(f"Created lock named {request.name}")
+        lock_store[request.key] = Lock()
+        logger.info(f"Created lock named {request.key}")
         return EmptyResponse()
 
 

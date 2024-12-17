@@ -17,5 +17,5 @@ message EmptyResponse {}
 
 // The request message containing the name of the lock to create.
 message CreateLockRequest {
-  string name = 1;
+  string key = 1;
 }

@@ -20,7 +20,7 @@ _sym_db = _symbol_database.Default()
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
-    b'\n\x0e\x64istlock.proto\x12\x08\x64istlock"\x0f\n\rEmptyResponse"!\n\x11\x43reateLockRequest\x12\x0c\n\x04name\x18\x01 \x01(\t2P\n\x08\x44istlock\x12\x44\n\nCreateLock\x12\x1b.distlock.CreateLockRequest\x1a\x17.distlock.EmptyResponse"\x00\x62\x06proto3'
+    b'\n\x0e\x64istlock.proto\x12\x08\x64istlock"\x0f\n\rEmptyResponse" \n\x11\x43reateLockRequest\x12\x0b\n\x03key\x18\x01 \x01(\t2P\n\x08\x44istlock\x12\x44\n\nCreateLock\x12\x1b.distlock.CreateLockRequest\x1a\x17.distlock.EmptyResponse"\x00\x62\x06proto3'
 )
 
 _globals = globals()
@@ -31,7 +31,7 @@ if not _descriptor._USE_C_DESCRIPTORS:
     _globals["_EMPTYRESPONSE"]._serialized_start = 28
     _globals["_EMPTYRESPONSE"]._serialized_end = 43
     _globals["_CREATELOCKREQUEST"]._serialized_start = 45
-    _globals["_CREATELOCKREQUEST"]._serialized_end = 78
-    _globals["_DISTLOCK"]._serialized_start = 80
-    _globals["_DISTLOCK"]._serialized_end = 160
+    _globals["_CREATELOCKREQUEST"]._serialized_end = 77
+    _globals["_DISTLOCK"]._serialized_start = 79
+    _globals["_DISTLOCK"]._serialized_end = 159
 # @@protoc_insertion_point(module_scope)
