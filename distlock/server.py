@@ -4,6 +4,7 @@ from threading import Lock
 
 import grpc
 
+from .lock_store import LockStore
 from .stubs.distlock_pb2 import CreateLockRequest, EmptyResponse
 from .stubs.distlock_pb2_grpc import DistlockServicer, add_DistlockServicer_to_server
 
@@ -15,16 +16,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-lock = Lock()
-lock_store: dict[str, bool] = {}
+lock_store = LockStore()
 
 
 class Servicer(DistlockServicer):
     def CreateLock(
         self, request: CreateLockRequest, context: grpc.ServicerContext
     ) -> EmptyResponse:
-        with lock:
-            lock_store[request.name] = True
+        lock_store[request.name] = Lock()
         logger.info(f"Created lock named {request.name}")
         return EmptyResponse()
 
