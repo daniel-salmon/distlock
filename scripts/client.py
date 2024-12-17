@@ -1,7 +1,7 @@
 import grpc
 
-from .stubs.distlock_pb2 import CreateLockRequest
-from .stubs.distlock_pb2_grpc import DistlockStub
+from distlock.stubs.distlock_pb2 import CreateLockRequest
+from distlock.stubs.distlock_pb2_grpc import DistlockStub
 
 
 def run(address: str = "[::]", port: str = "50051", name: str = "a_lock"):
