@@ -2,7 +2,7 @@ from threading import Lock
 from typing import TypedDict
 
 
-class AlreadyExistsError(Exception):
+class AlreadyExistsError(KeyError):
     pass
 
 
