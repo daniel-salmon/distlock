@@ -4,7 +4,7 @@ from threading import Lock
 
 import grpc
 
-from .lock_store import LockStore
+from .lock_store import AlreadyExistsError, LockStore
 from .stubs.distlock_pb2 import CreateLockRequest, EmptyResponse
 from .stubs.distlock_pb2_grpc import DistlockServicer, add_DistlockServicer_to_server
 
@@ -23,11 +23,12 @@ class Servicer(DistlockServicer):
     def CreateLock(
         self, request: CreateLockRequest, context: grpc.ServicerContext
     ) -> EmptyResponse:
-        if request.key in self.lock_store:
+        try:
+            self.lock_store.set_not_exists(request.key, Lock())
+        except AlreadyExistsError:
             context.set_details(f"A lock with the key {request.key} already exists")
             context.set_code(grpc.StatusCode.ALREADY_EXISTS)
             return EmptyResponse()
-        self.lock_store[request.key] = Lock()
         logger.info(f"Created lock named {request.key}")
         return EmptyResponse()
 

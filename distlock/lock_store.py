@@ -2,6 +2,10 @@ from threading import Lock
 from typing import TypedDict
 
 
+class AlreadyExistsError(Exception):
+    pass
+
+
 class Store(TypedDict):
     key: Lock
 
@@ -30,3 +34,9 @@ class LockStore:
     def __contains__(self, key: str) -> bool:
         with self._lock:
             return key in self._store
+
+    def set_not_exists(self, key: str, value: Lock) -> None:
+        with self._lock:
+            if key in self._store:
+                raise AlreadyExistsError
+            self._store[key] = value
