@@ -32,7 +32,7 @@ class Servicer(DistlockServicer):
         return EmptyResponse()
 
 
-def serve(address: str = "[::]", port: str = "50051", max_workers: int = 5):
+def serve(address: str = "[::]", port: int = 50051, max_workers: int = 5):
     server = grpc.server(ThreadPoolExecutor(max_workers=max_workers))
     add_DistlockServicer_to_server(Servicer(), server)
     server.add_insecure_port(f"{address}:{port}")

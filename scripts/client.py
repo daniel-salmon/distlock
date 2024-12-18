@@ -4,7 +4,7 @@ from distlock.stubs.distlock_pb2 import CreateLockRequest
 from distlock.stubs.distlock_pb2_grpc import DistlockStub
 
 
-def run(address: str = "[::]", port: str = "50051", key: str = "a_lock"):
+def run(address: str = "[::]", port: int = 50051, key: str = "a_lock"):
     with grpc.insecure_channel(f"{address}:{port}") as channel:
         stub = DistlockStub(channel)
         try:
