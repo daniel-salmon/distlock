@@ -1,3 +1,5 @@
+import sys
+
 import grpc
 
 from distlock.stubs.distlock_pb2 import Lock
@@ -14,8 +16,12 @@ def run(address: str = "[::]", port: int = 50051, key: str = "a_lock"):
                 print(f"Lock by the name {key} already exists")
                 return
             raise
-        print("Lock created")
+        print(f"Lock {key} created")
 
 
 if __name__ == "__main__":
-    run()
+    if len(sys.argv) == 1:
+        key = "a_lock"
+    else:
+        key = sys.argv[1]
+    run(key=key)
