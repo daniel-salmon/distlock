@@ -44,7 +44,10 @@ class LockStore:
         with self._lock:
             lock = self._store[key]
             if lock.acquired:
-                raise AlreadyAcquiredError(timeout=lock.timeout)
+                raise AlreadyAcquiredError(
+                    message=f"lock {key} already acquired by someone else",
+                    timeout=lock.timeout,
+                )
             lock.acquired = True
             lock.clock += 1
             lock.timeout = datetime.now(timezone.utc) + timedelta(
