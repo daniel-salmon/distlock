@@ -1,28 +1,28 @@
-from threading import Lock
+import threading
 from typing import TypedDict
 
 from .exceptions import AlreadyExistsError
-from .models import Mutex
+from .models import Lock
 
 
 class Store(TypedDict):
-    key: Mutex
+    key: Lock
 
 
 class LockStore:
     def __init__(self):
-        self._lock = Lock()
+        self._lock = threading.Lock()
         self._store = Store()
 
     def __len__(self) -> int:
         with self._lock:
             return len(self._store)
 
-    def __getitem__(self, key: str) -> Mutex:
+    def __getitem__(self, key: str) -> Lock:
         with self._lock:
             return self._store[key]
 
-    def __setitem__(self, key: str, value: Mutex) -> None:
+    def __setitem__(self, key: str, value: Lock) -> None:
         with self._lock:
             self._store[key] = value
 
@@ -34,7 +34,7 @@ class LockStore:
         with self._lock:
             return key in self._store
 
-    def set_not_exists(self, key: str, value: Mutex) -> None:
+    def set_not_exists(self, key: str, value: Lock) -> None:
         with self._lock:
             if key in self._store:
                 raise AlreadyExistsError
