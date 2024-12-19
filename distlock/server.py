@@ -1,12 +1,12 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from threading import Lock
 
 import grpc
 
-from .lock_store import AlreadyExistsError, LockStore
-from .stubs.distlock_pb2 import EmptyResponse
-from .stubs.distlock_pb2 import Lock as Lock_pb
+from .exceptions import AlreadyExistsError
+from .lock_store import LockStore
+from .models import Mutex
+from .stubs.distlock_pb2 import EmptyResponse, Lock
 from .stubs.distlock_pb2_grpc import DistlockServicer, add_DistlockServicer_to_server
 
 logging.basicConfig(
@@ -21,11 +21,11 @@ class Servicer(DistlockServicer):
     def __init__(self):
         self.lock_store = LockStore()
 
-    def CreateLock(
-        self, request: Lock_pb, context: grpc.ServicerContext
-    ) -> EmptyResponse:
+    def CreateLock(self, request: Lock, context: grpc.ServicerContext) -> EmptyResponse:
         try:
-            self.lock_store.set_not_exists(request.key, Lock())
+            self.lock_store.set_not_exists(
+                request.key, Mutex(acquired=False, clock=0, timeout=None)
+            )
         except AlreadyExistsError:
             context.set_details(f"A lock with the key {request.key} already exists")
             context.set_code(grpc.StatusCode.ALREADY_EXISTS)
