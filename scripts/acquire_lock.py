@@ -15,11 +15,13 @@ def run(address: str = "[::]", port: int = 50051, key: str = "a_lock"):
             if grpc.StatusCode.NOT_FOUND == e.code():
                 print(f"Lock by the name {key} does not exist")
                 return
-            elif grpc.StatusCode.RESOURCE_EXHAUSTED == e.code():
-                print(f"Lock by the name {key} is already acquired")
-                return
             raise
-        print(f"Lock {key} acquired:\n{lock}")
+        if lock.acquired:
+            print(f"Lock {key} acquired:\n{lock}")
+        else:
+            print(
+                f"Lock by the name {key} is acquired by someone else. Will be available at {lock.timeout.ToDatetime()}"
+            )
 
 
 if __name__ == "__main__":

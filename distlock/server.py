@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import grpc
 
-from .exceptions import AlreadyAcquiredError, AlreadyExistsError
+from .exceptions import AlreadyExistsError
 from .lock_store import LockStore
 from .models import Lock
 from .stubs import distlock_pb2, distlock_pb2_grpc
@@ -25,7 +25,13 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
     ) -> distlock_pb2.EmptyResponse:
         try:
             self.lock_store.set_not_exists(
-                request.key, Lock(acquired=False, clock=0, timeout=None)
+                request.key,
+                Lock(
+                    key=request.key,
+                    acquired=False,
+                    clock=0,
+                    timeout=None,
+                ),
             )
         except AlreadyExistsError:
             context.set_details(f"A lock with the key {request.key} already exists")
@@ -42,17 +48,11 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
                 key=request.key,
                 timeout_seconds=request.timeout_seconds,
             )
-        except AlreadyAcquiredError as e:
-            context.set_details(
-                f"Unable to acquire lock with key {request.key}; someone else already holds it. Available at: {e.timeout}"
-            )
-            context.set_code(grpc.StatusCode.RESOURCE_EXHAUSTED)
-            return distlock_pb2.Lock()
         except KeyError:
             context.set_details(f"A lock with key {request.key} does not exist")
             context.set_code(grpc.StatusCode.NOT_FOUND)
             return distlock_pb2.Lock()
-        return distlock_pb2.Lock(key=request.key, clock=lock.clock)
+        return lock.to_pb_Lock()
 
     def ReleaseLock(
         self, request: distlock_pb2.Lock, context: grpc.ServicerContext
