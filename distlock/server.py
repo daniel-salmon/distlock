@@ -27,12 +27,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
         try:
             self.lock_store.set_not_exists(
                 request.key,
-                Lock(
-                    key=request.key,
-                    acquired=False,
-                    clock=0,
-                    timeout=None,
-                ),
+                Lock(key=request.key),
             )
         except AlreadyExistsError:
             msg = f"A lock with key {request.key} already exists"

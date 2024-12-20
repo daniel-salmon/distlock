@@ -5,6 +5,12 @@ from pydantic import BaseModel
 
 from .stubs import distlock_pb2
 
+EPOCH_START = datetime(
+    year=1970,
+    month=1,
+    day=1,
+    tzinfo=timezone.utc,
+)
 ONE_MINUTE_IN_SECONDS = 1 * 60
 
 
@@ -12,8 +18,7 @@ class Lock(BaseModel):
     key: str = ""
     acquired: bool = False
     clock: int = 0
-    # NOTE: May later decide to default this to start of Unix epoch
-    timeout: datetime | None = None
+    timeout: datetime = EPOCH_START
 
     def acquire(self, timeout_seconds: int | None) -> None:
         if timeout_seconds is None:
@@ -24,8 +29,7 @@ class Lock(BaseModel):
 
     def to_pb_Lock(self) -> distlock_pb2.Lock:
         timeout = Timestamp()
-        if self.timeout is not None:
-            timeout.FromDatetime(self.timeout)
+        timeout.FromDatetime(self.timeout)
         return distlock_pb2.Lock(
             key=self.key,
             acquired=self.acquired,
