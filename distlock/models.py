@@ -6,17 +6,19 @@ from pydantic import BaseModel
 from .exceptions import AlreadyAcquiredError
 from .stubs import distlock_pb2
 
-TEN_MINUTES_IN_SECONDS = 10 * 60
+ONE_MINUTE_IN_SECONDS = 1 * 60
 
 
 class Lock(BaseModel):
     key: str = ""
     acquired: bool = False
     clock: int = 0
-    # NOTE: May default this to start of Unix epoch
+    # NOTE: May later decide to default this to start of Unix epoch
     timeout: datetime | None = None
 
-    def acquire(self, timeout_seconds: int = TEN_MINUTES_IN_SECONDS) -> None:
+    def acquire(self, timeout_seconds: int | None) -> None:
+        if timeout_seconds is None:
+            timeout_seconds = ONE_MINUTE_IN_SECONDS
         if self.acquired:
             raise AlreadyAcquiredError
         self.acquired = True

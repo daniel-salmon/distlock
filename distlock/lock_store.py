@@ -34,7 +34,7 @@ class LockStore:
         with self._lock:
             return key in self._store
 
-    def acquire(self, key: str, timeout_seconds: int) -> Lock:
+    def acquire(self, key: str, timeout_seconds: int | None) -> Lock:
         with self._lock:
             lock = self._store[key]
             if lock.acquired:
@@ -45,7 +45,7 @@ class LockStore:
                     timeout=lock.timeout,
                 )
                 return unacquired_lock
-            lock.acquire(timeout_seconds)
+            lock.acquire(timeout_seconds=timeout_seconds)
             return lock
 
     def set_not_exists(self, key: str, value: Lock) -> None:

@@ -23,6 +23,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
     def CreateLock(
         self, request: distlock_pb2.Lock, context: grpc.ServicerContext
     ) -> distlock_pb2.EmptyResponse:
+        logger.info(f"Received request to create lock named {request.key}")
         try:
             self.lock_store.set_not_exists(
                 request.key,
@@ -34,7 +35,9 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
                 ),
             )
         except AlreadyExistsError:
-            context.set_details(f"A lock with the key {request.key} already exists")
+            msg = f"A lock with key {request.key} already exists"
+            logger.info(msg)
+            context.set_details(msg)
             context.set_code(grpc.StatusCode.ALREADY_EXISTS)
             return distlock_pb2.EmptyResponse()
         logger.info(f"Created lock named {request.key}")
@@ -43,15 +46,25 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
     def AcquireLock(
         self, request: distlock_pb2.AcquireLockRequest, context: grpc.ServicerContext
     ) -> distlock_pb2.Lock:
+        logger.info(
+            f"Received request to acquire lock named {request.key} with a timeout of {request.timeout_seconds} seconds"
+        )
         try:
             lock = self.lock_store.acquire(
                 key=request.key,
-                timeout_seconds=request.timeout_seconds,
+                timeout_seconds=request.timeout_seconds
+                if request.timeout_seconds != 0
+                else None,
             )
         except KeyError:
-            context.set_details(f"A lock with key {request.key} does not exist")
+            msg = f"A lock with key {request.key} does not exist"
+            logger.info(msg)
+            context.set_details(msg)
             context.set_code(grpc.StatusCode.NOT_FOUND)
             return distlock_pb2.Lock()
+        logger.info(
+            f"Lock with key {request.key} has {'' if lock.acquired else 'not'} been acquired"
+        )
         return lock.to_pb_Lock()
 
     def ReleaseLock(
