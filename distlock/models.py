@@ -3,7 +3,6 @@ from datetime import datetime, timedelta, timezone
 from google.protobuf.timestamp_pb2 import Timestamp
 from pydantic import BaseModel
 
-from .exceptions import AlreadyAcquiredError
 from .stubs import distlock_pb2
 
 ONE_MINUTE_IN_SECONDS = 1 * 60
@@ -19,8 +18,6 @@ class Lock(BaseModel):
     def acquire(self, timeout_seconds: int | None) -> None:
         if timeout_seconds is None:
             timeout_seconds = ONE_MINUTE_IN_SECONDS
-        if self.acquired:
-            raise AlreadyAcquiredError
         self.acquired = True
         self.clock += 1
         self.timeout = datetime.now(timezone.utc) + timedelta(seconds=timeout_seconds)
