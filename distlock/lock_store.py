@@ -35,7 +35,7 @@ class LockStore:
         with self._lock:
             return key in self._store
 
-    def acquire(self, key: str, timeout_seconds: int | None) -> Lock:
+    def acquire(self, key: str, timeout_seconds: int) -> Lock:
         with self._lock:
             lock = self._store[key]
             if lock.acquired and lock.timeout > datetime.now(timezone.utc):

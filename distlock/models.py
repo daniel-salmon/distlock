@@ -11,7 +11,6 @@ EPOCH_START = datetime(
     day=1,
     tzinfo=timezone.utc,
 )
-ONE_MINUTE_IN_SECONDS = 1 * 60
 
 
 class Lock(BaseModel):
@@ -20,9 +19,7 @@ class Lock(BaseModel):
     clock: int = 0
     timeout: datetime = EPOCH_START
 
-    def acquire(self, timeout_seconds: int | None) -> None:
-        if timeout_seconds is None:
-            timeout_seconds = ONE_MINUTE_IN_SECONDS
+    def acquire(self, timeout_seconds: int) -> None:
         self.acquired = True
         self.clock += 1
         self.timeout = datetime.now(timezone.utc) + timedelta(seconds=timeout_seconds)

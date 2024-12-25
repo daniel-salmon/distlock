@@ -8,6 +8,8 @@ from .lock_store import LockStore
 from .models import Lock
 from .stubs import distlock_pb2, distlock_pb2_grpc
 
+ONE_MINUTE_IN_SECONDS = 1 * 60
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s %(asctime)s.%(msecs)03d %(message)s",
@@ -44,12 +46,14 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
         logger.info(
             f"Received request to acquire lock named {request.key} with a timeout of {request.timeout_seconds} seconds"
         )
+        if request.timeout_seconds != 0:
+            timeout_seconds = request.timeout_seconds
+        else:
+            timeout_seconds = ONE_MINUTE_IN_SECONDS
         try:
             lock = self.lock_store.acquire(
                 key=request.key,
-                timeout_seconds=request.timeout_seconds
-                if request.timeout_seconds != 0
-                else None,
+                timeout_seconds=timeout_seconds,
             )
         except KeyError:
             msg = f"A lock with key {request.key} does not exist"
