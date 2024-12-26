@@ -27,12 +27,12 @@ message Lock {
   string key = 1;
   bool acquired = 2;
   int64 clock = 3;
-  google.protobuf.Timestamp timeout = 4;
+  google.protobuf.Timestamp expires_at = 4;
 }
 
 
 // The request message containing the key name of the lock to acquire.
 message AcquireLockRequest {
   string key = 1;
-  int64 timeout_seconds = 2;
+  int64 expires_in_seconds = 2;
 }

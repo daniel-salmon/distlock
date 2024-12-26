@@ -44,16 +44,16 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
         self, request: distlock_pb2.AcquireLockRequest, context: grpc.ServicerContext
     ) -> distlock_pb2.Lock:
         logger.info(
-            f"Received request to acquire lock named {request.key} with a timeout of {request.timeout_seconds} seconds"
+            f"Received request to acquire lock named {request.key} with an expires in of {request.expires_in_seconds} seconds"
         )
-        if request.timeout_seconds != 0:
-            timeout_seconds = request.timeout_seconds
+        if request.expires_in_seconds != 0:
+            expires_in_seconds = request.expires_in_seconds
         else:
-            timeout_seconds = ONE_MINUTE_IN_SECONDS
+            expires_in_seconds = ONE_MINUTE_IN_SECONDS
         try:
             lock = self.lock_store.acquire(
                 key=request.key,
-                timeout_seconds=timeout_seconds,
+                expires_in_seconds=expires_in_seconds,
             )
         except KeyError:
             msg = f"A lock with key {request.key} does not exist"

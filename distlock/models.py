@@ -17,19 +17,21 @@ class Lock(BaseModel):
     key: str = ""
     acquired: bool = False
     clock: int = 0
-    timeout: datetime = EPOCH_START
+    expires_at: datetime = EPOCH_START
 
-    def acquire(self, timeout_seconds: int) -> None:
+    def acquire(self, expires_in_seconds: int) -> None:
         self.acquired = True
         self.clock += 1
-        self.timeout = datetime.now(timezone.utc) + timedelta(seconds=timeout_seconds)
+        self.expires_at = datetime.now(timezone.utc) + timedelta(
+            seconds=expires_in_seconds
+        )
 
     def to_pb_Lock(self) -> distlock_pb2.Lock:
-        timeout = Timestamp()
-        timeout.FromDatetime(self.timeout)
+        expires_at = Timestamp()
+        expires_at.FromDatetime(self.expires_at)
         return distlock_pb2.Lock(
             key=self.key,
             acquired=self.acquired,
             clock=self.clock,
-            timeout=timeout,
+            expires_at=expires_at,
         )
