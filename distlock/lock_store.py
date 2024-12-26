@@ -1,5 +1,4 @@
 import threading
-from datetime import datetime, timezone
 from typing import TypedDict
 
 from .exceptions import AlreadyExistsError
@@ -38,7 +37,7 @@ class LockStore:
     def acquire(self, key: str, expires_in_seconds: int) -> Lock:
         with self._lock:
             lock = self._store[key]
-            if lock.acquired and lock.expires_at > datetime.now(timezone.utc):
+            if lock.acquired and not lock.expired:
                 unacquired_lock = Lock(
                     key=lock.key,
                     acquired=False,

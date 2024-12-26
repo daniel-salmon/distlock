@@ -26,6 +26,10 @@ class Lock(BaseModel):
             seconds=expires_in_seconds
         )
 
+    @property
+    def expired(self) -> bool:
+        return self.expires_at <= datetime.now(timezone.utc)
+
     def to_pb_Lock(self) -> distlock_pb2.Lock:
         expires_at = Timestamp()
         expires_at.FromDatetime(self.expires_at)
