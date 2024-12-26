@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import grpc
 
-from .exceptions import AlreadyExistsError
+from .exceptions import AlreadyExistsError, UnreleasableError
 from .lock_store import LockStore
 from .models import Lock
 from .stubs import distlock_pb2, distlock_pb2_grpc
@@ -69,6 +69,25 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
     def ReleaseLock(
         self, request: distlock_pb2.Lock, context: grpc.ServicerContext
     ) -> distlock_pb2.EmptyResponse:
+        logger.info(f"Received request to release lock named {request.key}")
+        try:
+            self.lock_store.release(
+                key=request.key,
+                clock=request.clock,
+            )
+            logger.info(f"Lock with key {request.key} has been released")
+        except UnreleasableError as e:
+            msg = f"Could not release lock: {e}"
+            logger.info(msg)
+            context.set_details(msg)
+            context.set_code(grpc.StatusCode.ABORTED)
+            return distlock_pb2.EmptyResponse()
+        except KeyError:
+            msg = f"A lock with key {request.key} does not exist"
+            logger.info(msg)
+            context.set_details(msg)
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            return distlock_pb2.EmptyResponse()
         return distlock_pb2.EmptyResponse()
 
 

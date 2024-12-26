@@ -48,6 +48,11 @@ class LockStore:
             lock.acquire(expires_in_seconds=expires_in_seconds)
             return lock
 
+    def release(self, key: str, clock: int) -> None:
+        with self._lock:
+            lock = self._store[key]
+            lock.release(clock=clock)
+
     def set_not_exists(self, key: str, value: Lock) -> None:
         with self._lock:
             if key in self._store:

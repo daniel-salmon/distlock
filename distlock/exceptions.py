@@ -4,3 +4,7 @@ class AlreadyAcquiredError(Exception):
 
 class AlreadyExistsError(KeyError):
     pass
+
+
+class UnreleasableError(Exception):
+    pass
