@@ -105,6 +105,13 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             return request
         return lock.to_pb_Lock()
 
+    def ListLocks(
+        self, request: distlock_pb2.EmptyRequest, context: grpc.ServicerContext
+    ) -> distlock_pb2.Locks:
+        logger.info("Received request to list locks")
+        locks = [lock.to_pb_Lock() for lock in self.lock_store.to_list()]
+        return distlock_pb2.Locks(locks=locks)
+
 
 def serve(address: str = "[::]", port: int = 50051, max_workers: int = 5):
     server = grpc.server(ThreadPoolExecutor(max_workers=max_workers))

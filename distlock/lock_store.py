@@ -1,5 +1,5 @@
 import threading
-from typing import Generator, TypedDict
+from typing import TypedDict
 
 from .exceptions import AlreadyExistsError
 from .models import Lock
@@ -13,9 +13,6 @@ class LockStore:
     def __init__(self):
         self._lock = threading.Lock()
         self._store = Store()
-
-    def __iter__(self) -> Generator[Lock, None, None]:
-        yield from self._store.values()
 
     def __len__(self) -> int:
         with self._lock:
@@ -61,3 +58,9 @@ class LockStore:
             if key in self._store:
                 raise AlreadyExistsError
             self._store[key] = value
+
+    # Can't define __iter__ and use list(lock_store) in the
+    # calling code because that would not be thread safe.
+    def to_list(self) -> list[Lock]:
+        with self._lock:
+            return list(self._store.values())
