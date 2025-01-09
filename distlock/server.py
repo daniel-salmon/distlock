@@ -112,6 +112,20 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
         locks = [lock.to_pb_Lock() for lock in self.lock_store.to_list()]
         return distlock_pb2.Locks(locks=locks)
 
+    def DeleteLock(
+        self, request: distlock_pb2.Lock, context: grpc.ServicerContext
+    ) -> distlock_pb2.EmptyResponse:
+        logger.info("Received request to delete lock with key {request.key}")
+        try:
+            del self.lock_store[request.key]
+        except KeyError:
+            msg = f"A lock with key {request.key} does not exist"
+            logger.info(msg)
+            context.set_details(msg)
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            return request
+        return distlock_pb2.EmptyResponse()
+
 
 def serve(address: str = "[::]", port: int = 50051, max_workers: int = 5):
     server = grpc.server(ThreadPoolExecutor(max_workers=max_workers))
