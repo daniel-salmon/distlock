@@ -123,7 +123,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             logger.info(msg)
             context.set_details(msg)
             context.set_code(grpc.StatusCode.NOT_FOUND)
-            return request
+            return distlock_pb2.EmptyResponse()
         return distlock_pb2.EmptyResponse()
 
 
