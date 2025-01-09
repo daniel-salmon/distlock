@@ -115,7 +115,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
     def DeleteLock(
         self, request: distlock_pb2.Lock, context: grpc.ServicerContext
     ) -> distlock_pb2.EmptyResponse:
-        logger.info("Received request to delete lock with key {request.key}")
+        logger.info(f"Received request to delete lock with key {request.key}")
         try:
             del self.lock_store[request.key]
         except KeyError:
