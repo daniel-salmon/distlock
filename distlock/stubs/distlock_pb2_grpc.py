@@ -109,7 +109,9 @@ class DistlockServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def DeleteLock(self, request, context):
-        """Deletes the lock with the given key from the server.
+        """Deletes the lock with the given key from the server.  The lock object
+        passed tto this procedured does not have to have anything other than the
+        key defined for the call to be successful.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')

@@ -24,7 +24,9 @@ service Distlock {
   // Fetches all locks from the server, without acquiring any of them.
   rpc ListLocks(EmptyRequest) returns (Locks) {}
 
-  // Deletes the lock with the given key from the server.
+  // Deletes the lock with the given key from the server.  The lock object
+  // passed tto this procedured does not have to have anything other than the
+  // key defined for the call to be successful.
   rpc DeleteLock(Lock) returns (EmptyResponse) {}
 }
 
