@@ -94,6 +94,8 @@ class DistlockServicer(object):
 
     def GetLock(self, request, context):
         """Fetches the lock with the given key from the server, without acquiring it.
+        The lock object passed to this procedure does not have to have anything
+        other than the key defined for the call to be successful.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
