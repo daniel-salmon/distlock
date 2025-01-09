@@ -90,6 +90,21 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             return distlock_pb2.EmptyResponse()
         return distlock_pb2.EmptyResponse()
 
+    def GetLock(
+        self, request: distlock_pb2.Lock, context: grpc.ServicerContext
+    ) -> distlock_pb2.Lock:
+        logger.info(f"Received request to fetch lock named {request.key}")
+        try:
+            lock = self.lock_store[request.key]
+            logger.info(f"Lock with key {lock.key} has been fetched")
+        except KeyError:
+            msg = f"A lock with key {request.key} does not exist"
+            logger.info(msg)
+            context.set_details(msg)
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            return request
+        return lock.to_pb_Lock()
+
 
 def serve(address: str = "[::]", port: int = 50051, max_workers: int = 5):
     server = grpc.server(ThreadPoolExecutor(max_workers=max_workers))

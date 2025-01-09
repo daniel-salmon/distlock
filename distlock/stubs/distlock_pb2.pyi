@@ -1,9 +1,14 @@
 from google.protobuf import timestamp_pb2 as _timestamp_pb2
+from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Optional, Union as _Union
+from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
+
+class EmptyRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
 
 class EmptyResponse(_message.Message):
     __slots__ = ()
@@ -20,6 +25,12 @@ class Lock(_message.Message):
     clock: int
     expires_at: _timestamp_pb2.Timestamp
     def __init__(self, key: _Optional[str] = ..., acquired: bool = ..., clock: _Optional[int] = ..., expires_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+
+class Locks(_message.Message):
+    __slots__ = ("locks",)
+    LOCKS_FIELD_NUMBER: _ClassVar[int]
+    locks: _containers.RepeatedCompositeFieldContainer[Lock]
+    def __init__(self, locks: _Optional[_Iterable[_Union[Lock, _Mapping]]] = ...) -> None: ...
 
 class AcquireLockRequest(_message.Message):
     __slots__ = ("key", "expires_in_seconds")

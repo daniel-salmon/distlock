@@ -25,19 +25,23 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x64istlock.proto\x12\x08\x64istlock\x1a\x1fgoogle/protobuf/timestamp.proto\"\x0f\n\rEmptyResponse\"d\n\x04Lock\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x10\n\x08\x61\x63quired\x18\x02 \x01(\x08\x12\r\n\x05\x63lock\x18\x03 \x01(\x03\x12.\n\nexpires_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"=\n\x12\x41\x63quireLockRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1a\n\x12\x65xpires_in_seconds\x18\x02 \x01(\x03\x32\xbc\x01\n\x08\x44istlock\x12\x37\n\nCreateLock\x12\x0e.distlock.Lock\x1a\x17.distlock.EmptyResponse\"\x00\x12=\n\x0b\x41\x63quireLock\x12\x1c.distlock.AcquireLockRequest\x1a\x0e.distlock.Lock\"\x00\x12\x38\n\x0bReleaseLock\x12\x0e.distlock.Lock\x1a\x17.distlock.EmptyResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x64istlock.proto\x12\x08\x64istlock\x1a\x1fgoogle/protobuf/timestamp.proto\"\x0e\n\x0c\x45mptyRequest\"\x0f\n\rEmptyResponse\"d\n\x04Lock\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x10\n\x08\x61\x63quired\x18\x02 \x01(\x08\x12\r\n\x05\x63lock\x18\x03 \x01(\x03\x12.\n\nexpires_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"&\n\x05Locks\x12\x1d\n\x05locks\x18\x01 \x03(\x0b\x32\x0e.distlock.Lock\"=\n\x12\x41\x63quireLockRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1a\n\x12\x65xpires_in_seconds\x18\x02 \x01(\x03\x32\xda\x02\n\x08\x44istlock\x12\x37\n\nCreateLock\x12\x0e.distlock.Lock\x1a\x17.distlock.EmptyResponse\"\x00\x12=\n\x0b\x41\x63quireLock\x12\x1c.distlock.AcquireLockRequest\x1a\x0e.distlock.Lock\"\x00\x12\x38\n\x0bReleaseLock\x12\x0e.distlock.Lock\x1a\x17.distlock.EmptyResponse\"\x00\x12+\n\x07GetLock\x12\x0e.distlock.Lock\x1a\x0e.distlock.Lock\"\x00\x12\x36\n\tListLocks\x12\x16.distlock.EmptyRequest\x1a\x0f.distlock.Locks\"\x00\x12\x37\n\nDeleteLock\x12\x0e.distlock.Lock\x1a\x17.distlock.EmptyResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'distlock_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_EMPTYRESPONSE']._serialized_start=61
-  _globals['_EMPTYRESPONSE']._serialized_end=76
-  _globals['_LOCK']._serialized_start=78
-  _globals['_LOCK']._serialized_end=178
-  _globals['_ACQUIRELOCKREQUEST']._serialized_start=180
-  _globals['_ACQUIRELOCKREQUEST']._serialized_end=241
-  _globals['_DISTLOCK']._serialized_start=244
-  _globals['_DISTLOCK']._serialized_end=432
+  _globals['_EMPTYREQUEST']._serialized_start=61
+  _globals['_EMPTYREQUEST']._serialized_end=75
+  _globals['_EMPTYRESPONSE']._serialized_start=77
+  _globals['_EMPTYRESPONSE']._serialized_end=92
+  _globals['_LOCK']._serialized_start=94
+  _globals['_LOCK']._serialized_end=194
+  _globals['_LOCKS']._serialized_start=196
+  _globals['_LOCKS']._serialized_end=234
+  _globals['_ACQUIRELOCKREQUEST']._serialized_start=236
+  _globals['_ACQUIRELOCKREQUEST']._serialized_end=297
+  _globals['_DISTLOCK']._serialized_start=300
+  _globals['_DISTLOCK']._serialized_end=646
 # @@protoc_insertion_point(module_scope)

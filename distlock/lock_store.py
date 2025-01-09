@@ -1,5 +1,5 @@
 import threading
-from typing import TypedDict
+from typing import Generator, TypedDict
 
 from .exceptions import AlreadyExistsError
 from .models import Lock
@@ -13,6 +13,9 @@ class LockStore:
     def __init__(self):
         self._lock = threading.Lock()
         self._store = Store()
+
+    def __iter__(self) -> Generator[Lock, None, None]:
+        yield from self._store.values()
 
     def __len__(self) -> int:
         with self._lock:
