@@ -1,9 +1,8 @@
-from threading import Lock
+import threading
 from typing import TypedDict
 
-
-class AlreadyExistsError(KeyError):
-    pass
+from .exceptions import AlreadyExistsError
+from .models import Lock
 
 
 class Store(TypedDict):
@@ -12,7 +11,7 @@ class Store(TypedDict):
 
 class LockStore:
     def __init__(self):
-        self._lock = Lock()
+        self._lock = threading.Lock()
         self._store = Store()
 
     def __len__(self) -> int:
@@ -34,6 +33,25 @@ class LockStore:
     def __contains__(self, key: str) -> bool:
         with self._lock:
             return key in self._store
+
+    def acquire(self, key: str, expires_in_seconds: int) -> Lock:
+        with self._lock:
+            lock = self._store[key]
+            if lock.acquired and not lock.expired:
+                unacquired_lock = Lock(
+                    key=lock.key,
+                    acquired=False,
+                    clock=lock.clock,
+                    expires_at=lock.expires_at,
+                )
+                return unacquired_lock
+            lock.acquire(expires_in_seconds=expires_in_seconds)
+            return lock
+
+    def release(self, key: str, clock: int) -> None:
+        with self._lock:
+            lock = self._store[key]
+            lock.release(clock=clock)
 
     def set_not_exists(self, key: str, value: Lock) -> None:
         with self._lock:

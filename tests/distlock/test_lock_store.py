@@ -1,8 +1,8 @@
-from threading import Lock
-
 import pytest
 
-from distlock.lock_store import AlreadyExistsError, LockStore
+from distlock.exceptions import AlreadyExistsError
+from distlock.lock_store import LockStore
+from distlock.models import Lock
 
 keys = ["a_lock", "another_lock", "pizza"]
 
