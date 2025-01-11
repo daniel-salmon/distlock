@@ -58,3 +58,9 @@ class LockStore:
             if key in self._store:
                 raise AlreadyExistsError
             self._store[key] = value
+
+    # Can't define __iter__ and use list(lock_store) in the
+    # calling code because that would not be thread safe.
+    def to_list(self) -> list[Lock]:
+        with self._lock:
+            return list(self._store.values())

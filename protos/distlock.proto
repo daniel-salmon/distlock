@@ -15,7 +15,24 @@ service Distlock {
 
   // Releases the lock with the given key from the server.
   rpc ReleaseLock(Lock) returns (EmptyResponse) {}
+
+  // Fetches the lock with the given key from the server, without acquiring it.
+  // The lock object passed to this procedure does not have to have anything
+  // other than the key defined for the call to be successful.
+  rpc GetLock(Lock) returns (Lock) {}
+
+  // Fetches all locks from the server, without acquiring any of them.
+  rpc ListLocks(EmptyRequest) returns (Locks) {}
+
+  // Deletes the lock with the given key from the server.  The lock object
+  // passed tto this procedured does not have to have anything other than the
+  // key defined for the call to be successful.
+  rpc DeleteLock(Lock) returns (EmptyResponse) {}
 }
+
+
+// The empty request.
+message EmptyRequest {}
 
 
 // The empty response.
@@ -28,6 +45,12 @@ message Lock {
   bool acquired = 2;
   int64 clock = 3;
   google.protobuf.Timestamp expires_at = 4;
+}
+
+
+// The message for an array of lock objects.
+message Locks {
+  repeated Lock locks = 1;
 }
 
 

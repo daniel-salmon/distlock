@@ -33,7 +33,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             )
         except AlreadyExistsError:
             msg = f"A lock with key {request.key} already exists"
-            logger.info(msg)
+            logger.error(msg)
             context.set_details(msg)
             context.set_code(grpc.StatusCode.ALREADY_EXISTS)
             return distlock_pb2.EmptyResponse()
@@ -57,7 +57,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             )
         except KeyError:
             msg = f"A lock with key {request.key} does not exist"
-            logger.info(msg)
+            logger.error(msg)
             context.set_details(msg)
             context.set_code(grpc.StatusCode.NOT_FOUND)
             return distlock_pb2.Lock()
@@ -78,13 +78,49 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             logger.info(f"Lock with key {request.key} has been released")
         except UnreleasableError as e:
             msg = f"Could not release lock: {e}"
-            logger.info(msg)
+            logger.error(msg)
             context.set_details(msg)
             context.set_code(grpc.StatusCode.ABORTED)
             return distlock_pb2.EmptyResponse()
         except KeyError:
             msg = f"A lock with key {request.key} does not exist"
-            logger.info(msg)
+            logger.error(msg)
+            context.set_details(msg)
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            return distlock_pb2.EmptyResponse()
+        return distlock_pb2.EmptyResponse()
+
+    def GetLock(
+        self, request: distlock_pb2.Lock, context: grpc.ServicerContext
+    ) -> distlock_pb2.Lock:
+        logger.info(f"Received request to fetch lock named {request.key}")
+        try:
+            lock = self.lock_store[request.key]
+            logger.info(f"Lock with key {lock.key} has been fetched")
+        except KeyError:
+            msg = f"A lock with key {request.key} does not exist"
+            logger.error(msg)
+            context.set_details(msg)
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            return request
+        return lock.to_pb_Lock()
+
+    def ListLocks(
+        self, request: distlock_pb2.EmptyRequest, context: grpc.ServicerContext
+    ) -> distlock_pb2.Locks:
+        logger.info("Received request to list locks")
+        locks = [lock.to_pb_Lock() for lock in self.lock_store.to_list()]
+        return distlock_pb2.Locks(locks=locks)
+
+    def DeleteLock(
+        self, request: distlock_pb2.Lock, context: grpc.ServicerContext
+    ) -> distlock_pb2.EmptyResponse:
+        logger.info(f"Received request to delete lock with key {request.key}")
+        try:
+            del self.lock_store[request.key]
+        except KeyError:
+            msg = f"A lock with key {request.key} does not exist"
+            logger.error(msg)
             context.set_details(msg)
             context.set_code(grpc.StatusCode.NOT_FOUND)
             return distlock_pb2.EmptyResponse()

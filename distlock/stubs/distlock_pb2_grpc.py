@@ -50,6 +50,21 @@ class DistlockStub(object):
                 request_serializer=distlock__pb2.Lock.SerializeToString,
                 response_deserializer=distlock__pb2.EmptyResponse.FromString,
                 _registered_method=True)
+        self.GetLock = channel.unary_unary(
+                '/distlock.Distlock/GetLock',
+                request_serializer=distlock__pb2.Lock.SerializeToString,
+                response_deserializer=distlock__pb2.Lock.FromString,
+                _registered_method=True)
+        self.ListLocks = channel.unary_unary(
+                '/distlock.Distlock/ListLocks',
+                request_serializer=distlock__pb2.EmptyRequest.SerializeToString,
+                response_deserializer=distlock__pb2.Locks.FromString,
+                _registered_method=True)
+        self.DeleteLock = channel.unary_unary(
+                '/distlock.Distlock/DeleteLock',
+                request_serializer=distlock__pb2.Lock.SerializeToString,
+                response_deserializer=distlock__pb2.EmptyResponse.FromString,
+                _registered_method=True)
 
 
 class DistlockServicer(object):
@@ -77,6 +92,31 @@ class DistlockServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetLock(self, request, context):
+        """Fetches the lock with the given key from the server, without acquiring it.
+        The lock object passed to this procedure does not have to have anything
+        other than the key defined for the call to be successful.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListLocks(self, request, context):
+        """Fetches all locks from the server, without acquiring any of them.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteLock(self, request, context):
+        """Deletes the lock with the given key from the server.  The lock object
+        passed tto this procedured does not have to have anything other than the
+        key defined for the call to be successful.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DistlockServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -92,6 +132,21 @@ def add_DistlockServicer_to_server(servicer, server):
             ),
             'ReleaseLock': grpc.unary_unary_rpc_method_handler(
                     servicer.ReleaseLock,
+                    request_deserializer=distlock__pb2.Lock.FromString,
+                    response_serializer=distlock__pb2.EmptyResponse.SerializeToString,
+            ),
+            'GetLock': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetLock,
+                    request_deserializer=distlock__pb2.Lock.FromString,
+                    response_serializer=distlock__pb2.Lock.SerializeToString,
+            ),
+            'ListLocks': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListLocks,
+                    request_deserializer=distlock__pb2.EmptyRequest.FromString,
+                    response_serializer=distlock__pb2.Locks.SerializeToString,
+            ),
+            'DeleteLock': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteLock,
                     request_deserializer=distlock__pb2.Lock.FromString,
                     response_serializer=distlock__pb2.EmptyResponse.SerializeToString,
             ),
@@ -176,6 +231,87 @@ class Distlock(object):
             request,
             target,
             '/distlock.Distlock/ReleaseLock',
+            distlock__pb2.Lock.SerializeToString,
+            distlock__pb2.EmptyResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetLock(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/distlock.Distlock/GetLock',
+            distlock__pb2.Lock.SerializeToString,
+            distlock__pb2.Lock.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListLocks(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/distlock.Distlock/ListLocks',
+            distlock__pb2.EmptyRequest.SerializeToString,
+            distlock__pb2.Locks.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteLock(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/distlock.Distlock/DeleteLock',
             distlock__pb2.Lock.SerializeToString,
             distlock__pb2.EmptyResponse.FromString,
             options,
