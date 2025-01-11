@@ -33,7 +33,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             )
         except AlreadyExistsError:
             msg = f"A lock with key {request.key} already exists"
-            logger.info(msg)
+            logger.error(msg)
             context.set_details(msg)
             context.set_code(grpc.StatusCode.ALREADY_EXISTS)
             return distlock_pb2.EmptyResponse()
@@ -57,7 +57,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             )
         except KeyError:
             msg = f"A lock with key {request.key} does not exist"
-            logger.info(msg)
+            logger.error(msg)
             context.set_details(msg)
             context.set_code(grpc.StatusCode.NOT_FOUND)
             return distlock_pb2.Lock()
@@ -78,13 +78,13 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             logger.info(f"Lock with key {request.key} has been released")
         except UnreleasableError as e:
             msg = f"Could not release lock: {e}"
-            logger.info(msg)
+            logger.error(msg)
             context.set_details(msg)
             context.set_code(grpc.StatusCode.ABORTED)
             return distlock_pb2.EmptyResponse()
         except KeyError:
             msg = f"A lock with key {request.key} does not exist"
-            logger.info(msg)
+            logger.error(msg)
             context.set_details(msg)
             context.set_code(grpc.StatusCode.NOT_FOUND)
             return distlock_pb2.EmptyResponse()
@@ -99,7 +99,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             logger.info(f"Lock with key {lock.key} has been fetched")
         except KeyError:
             msg = f"A lock with key {request.key} does not exist"
-            logger.info(msg)
+            logger.error(msg)
             context.set_details(msg)
             context.set_code(grpc.StatusCode.NOT_FOUND)
             return request
@@ -120,7 +120,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             del self.lock_store[request.key]
         except KeyError:
             msg = f"A lock with key {request.key} does not exist"
-            logger.info(msg)
+            logger.error(msg)
             context.set_details(msg)
             context.set_code(grpc.StatusCode.NOT_FOUND)
             return distlock_pb2.EmptyResponse()
