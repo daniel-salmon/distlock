@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from typing import Self
 
 from google.protobuf.timestamp_pb2 import Timestamp
 from pydantic import BaseModel
@@ -37,6 +38,16 @@ class Lock(BaseModel):
                 f"Tried to release lock at clock {self.clock}, but given clock {clock}. Perhaps client is out of sync?"
             )
         self.acquired = False
+
+    @classmethod
+    def from_pb(cls, lock: distlock_pb2.Lock) -> Self:
+        new_lock = cls(
+            key=lock.key,
+            acquired=lock.acquired,
+            clock=lock.clock,
+            expires_at=lock.expires_at.ToDatetime(),
+        )
+        return new_lock
 
     def to_pb_Lock(self) -> distlock_pb2.Lock:
         expires_at = Timestamp()
