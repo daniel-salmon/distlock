@@ -1,3 +1,5 @@
+import time
+
 import grpc
 
 from .exceptions import AlreadyExistsError, NotFoundError, UnreleasableError
@@ -11,24 +13,42 @@ class Distlock:
         self._address = f"{address}:{port}"
 
     # TODO: Add ability to block until lock is acquired
-    def acquire_lock(self, key: str, expires_in_seconds: int) -> Lock:
+    def acquire_lock(
+        self,
+        key: str,
+        expires_in_seconds: int,
+        blocking: bool = True,
+        timeout_seconds: float = -1.0,
+        heartbeat_seconds: float = 3.0,
+    ) -> Lock:
+        timeout = (
+            time.time() + timeout_seconds if timeout_seconds >= 0 else float("inf")
+        )
         with grpc.insecure_channel(self._address) as channel:
             stub = DistlockStub(channel)
-            try:
-                lock = Lock.from_pb(
-                    stub.AcquireLock(
-                        distlock_pb2.AcquireLockRequest(
-                            key=key,
-                            expires_in_seconds=expires_in_seconds,
+            while True:
+                try:
+                    lock = Lock.from_pb(
+                        stub.AcquireLock(
+                            distlock_pb2.AcquireLockRequest(
+                                key=key,
+                                expires_in_seconds=expires_in_seconds,
+                            ),
                         ),
-                    ),
-                )
-            except grpc.RpcError as e:
-                if e.code() == grpc.StatusCode.NOT_FOUND:
-                    raise NotFoundError(
-                        f"Lock by the name {key} does not exist on the server"
                     )
-                raise
+                except grpc.RpcError as e:
+                    if e.code() == grpc.StatusCode.NOT_FOUND:
+                        raise NotFoundError(
+                            f"Lock by the name {key} does not exist on the server"
+                        )
+                    raise
+                if lock.acquired or not blocking:
+                    break
+                if time.time() > timeout:
+                    raise TimeoutError(
+                        f"Unable to acquire a lock on {key} within the timeout"
+                    )
+                time.sleep(heartbeat_seconds)
         return lock
 
     def create_lock(self, key: str) -> None:
