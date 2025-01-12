@@ -118,6 +118,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
         logger.info(f"Received request to delete lock with key {request.key}")
         try:
             del self.lock_store[request.key]
+            logger.info(f"Lock with key {request.key} has been deleted")
         except KeyError:
             msg = f"A lock with key {request.key} does not exist"
             logger.error(msg)

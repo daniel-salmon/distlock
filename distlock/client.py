@@ -71,7 +71,10 @@ class Distlock:
     def list_locks(self) -> list[Lock]:
         with grpc.insecure_channel(self._address) as channel:
             stub = DistlockStub(channel)
-            locks = [Lock.from_pb(lock) for lock in stub.ListLocks()]
+            locks = [
+                Lock.from_pb(lock)
+                for lock in stub.ListLocks(distlock_pb2.EmptyRequest()).locks
+            ]
         return locks
 
     def release_lock(self, key: str) -> None:
