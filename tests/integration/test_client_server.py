@@ -1,4 +1,6 @@
+import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
@@ -152,3 +154,37 @@ def test_acquire_lock_blocking_timeout(
                 blocking=True,
                 timeout_seconds=0.1,
             )
+
+
+def test_acquire_release_acquire_cycle(
+    create_locks: list[str], distlock: Distlock
+) -> None:
+    locks = [distlock.acquire_lock(key, expires_in_seconds=3) for key in create_locks]
+    assert all(lock.acquired for lock in locks)
+    assert all(lock.clock == 1 for lock in locks)
+    for lock in locks:
+        distlock.release_lock(lock)
+    locks = [distlock.get_lock(key) for key in create_locks]
+    assert all(not lock.acquired for lock in locks)
+    assert all(lock.clock == 1 for lock in locks)
+    locks = [distlock.acquire_lock(key, expires_in_seconds=3) for key in create_locks]
+    assert all(lock.acquired for lock in locks)
+    assert all(lock.clock == 2 for lock in locks)
+    for lock in locks:
+        distlock.release_lock(lock)
+    locks = [distlock.get_lock(key) for key in create_locks]
+    assert all(not lock.acquired for lock in locks)
+    assert all(lock.clock == 2 for lock in locks)
+
+
+def test_multiple_clients(distlock_server: subprocess.Popen) -> None:
+    def client(key: str) -> None:
+        distlock = Distlock()
+        distlock.create_lock(key)
+        lock = distlock.acquire_lock(key, expires_in_seconds=1)
+        distlock.release_lock(lock)
+        distlock.delete_lock(key)
+
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        results = executor.map(client, ["key1", "key2", "key3"])
+    _ = [result for result in results]
