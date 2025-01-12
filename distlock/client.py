@@ -20,9 +20,11 @@ class Distlock:
         timeout_seconds: float = -1.0,
         heartbeat_seconds: float = 3.0,
     ) -> Lock:
-        timeout = (
-            time.time() + timeout_seconds if timeout_seconds >= 0 else float("inf")
-        )
+        if timeout_seconds >= 0:
+            timeout = time.time() + timeout_seconds
+            heartbeat_seconds = min(heartbeat_seconds, timeout_seconds)
+        else:
+            timeout = float("inf")
         with grpc.insecure_channel(self._address) as channel:
             stub = DistlockStub(channel)
             while True:

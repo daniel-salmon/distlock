@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 from distlock import Distlock, UnreleasableError
@@ -79,3 +81,74 @@ def test_bad_release(create_locks: list[str], distlock: Distlock) -> None:
         updated_lock.clock -= 1
         with pytest.raises(UnreleasableError):
             distlock.release_lock(updated_lock)
+
+
+def test_acquire_lock_no_blocking(create_locks: list[str], distlock: Distlock) -> None:
+    for key in create_locks:
+        distlock.acquire_lock(key, expires_in_seconds=60)
+        lock = distlock.get_lock(key)
+        assert lock.acquired
+        assert lock.clock == 1
+        unacquired_lock = distlock.acquire_lock(
+            key=key,
+            expires_in_seconds=60,
+            blocking=False,
+        )
+        assert not unacquired_lock.acquired
+
+
+def test_acquire_lock_blocking(create_locks: list[str], distlock: Distlock) -> None:
+    for key in create_locks:
+        start = time.time()
+        distlock.acquire_lock(key, expires_in_seconds=3)
+        lock = distlock.get_lock(key)
+        assert lock.acquired
+        assert lock.clock == 1
+        acquired_lock = distlock.acquire_lock(
+            key=key,
+            expires_in_seconds=3,
+            blocking=True,
+        )
+        elapsed = time.time() - start
+        assert elapsed > 2.0
+        assert acquired_lock.acquired
+        assert acquired_lock.clock == 2
+
+
+def test_acquire_lock_blocking_heartbeats(
+    create_locks: list[str], distlock: Distlock
+) -> None:
+    for key in create_locks:
+        start = time.time()
+        distlock.acquire_lock(key, expires_in_seconds=5)
+        lock = distlock.get_lock(key)
+        assert lock.acquired
+        assert lock.clock == 1
+        acquired_lock = distlock.acquire_lock(
+            key=key,
+            expires_in_seconds=5,
+            blocking=True,
+            timeout_seconds=10,
+            heartbeat_seconds=1,
+        )
+        elapsed = time.time() - start
+        assert elapsed > 4.0
+        assert acquired_lock.acquired
+        assert acquired_lock.clock == 2
+
+
+def test_acquire_lock_blocking_timeout(
+    create_locks: list[str], distlock: Distlock
+) -> None:
+    for key in create_locks:
+        distlock.acquire_lock(key, expires_in_seconds=3)
+        lock = distlock.get_lock(key)
+        assert lock.acquired
+        assert lock.clock == 1
+        with pytest.raises(TimeoutError):
+            _ = distlock.acquire_lock(
+                key=key,
+                expires_in_seconds=3,
+                blocking=True,
+                timeout_seconds=0.1,
+            )
