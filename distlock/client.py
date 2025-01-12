@@ -12,7 +12,6 @@ class Distlock:
     def __init__(self, address: str = "[::]", port: int = 50051):
         self._address = f"{address}:{port}"
 
-    # TODO: Add ability to block until lock is acquired
     def acquire_lock(
         self,
         key: str,
