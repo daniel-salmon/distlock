@@ -49,7 +49,7 @@ class Lock(BaseModel):
         )
         return new_lock
 
-    def to_pb_Lock(self) -> distlock_pb2.Lock:
+    def to_pb(self) -> distlock_pb2.Lock:
         expires_at = Timestamp()
         expires_at.FromDatetime(self.expires_at)
         return distlock_pb2.Lock(

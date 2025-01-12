@@ -80,7 +80,7 @@ class Distlock:
             try:
                 lock = Lock.from_pb(stub.GetLock(distlock_pb2.Lock(key=key)))
             except grpc.RpcError as e:
-                if e.code() == grpc.SatusCode.NOT_FOUND:
+                if e.code() == grpc.StatusCode.NOT_FOUND:
                     raise NotFoundError(
                         f"Lock by the name {key} does not exist on the server"
                     )
@@ -96,15 +96,15 @@ class Distlock:
             ]
         return locks
 
-    def release_lock(self, key: str) -> None:
+    def release_lock(self, lock: Lock) -> None:
         with grpc.insecure_channel(self._address) as channel:
             stub = DistlockStub(channel)
             try:
-                _ = stub.ReleaseLock(distlock_pb2.Lock(key=key))
+                _ = stub.ReleaseLock(lock.to_pb())
             except grpc.RpcError as e:
-                if e.code == grpc.StatusCode.ABORTED:
+                if e.code() == grpc.StatusCode.ABORTED:
                     raise UnreleasableError(e.details())
                 elif e.code() == grpc.StatusCode.NOT_FOUND:
-                    raise NotFoundError(f"Lock by the name {key} does not exist")
+                    raise NotFoundError(f"Lock by the name {lock.key} does not exist")
                 raise
         return

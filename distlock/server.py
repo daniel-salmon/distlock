@@ -64,7 +64,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
         logger.info(
             f"Lock with key {request.key} has {'' if lock.acquired else 'not'} been acquired"
         )
-        return lock.to_pb_Lock()
+        return lock.to_pb()
 
     def ReleaseLock(
         self, request: distlock_pb2.Lock, context: grpc.ServicerContext
@@ -103,13 +103,13 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             context.set_details(msg)
             context.set_code(grpc.StatusCode.NOT_FOUND)
             return request
-        return lock.to_pb_Lock()
+        return lock.to_pb()
 
     def ListLocks(
         self, request: distlock_pb2.EmptyRequest, context: grpc.ServicerContext
     ) -> distlock_pb2.Locks:
         logger.info("Received request to list locks")
-        locks = [lock.to_pb_Lock() for lock in self.lock_store.to_list()]
+        locks = [lock.to_pb() for lock in self.lock_store.to_list()]
         return distlock_pb2.Locks(locks=locks)
 
     def DeleteLock(

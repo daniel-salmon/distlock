@@ -1,22 +1,16 @@
 import sys
 
-import grpc
-
-from distlock.stubs.distlock_pb2 import Lock
-from distlock.stubs.distlock_pb2_grpc import DistlockStub
+from distlock import Distlock, NotFoundError
 
 
 def run(address: str = "[::]", port: int = 50051, key: str = "a_lock"):
-    with grpc.insecure_channel(f"{address}:{port}") as channel:
-        stub = DistlockStub(channel)
-        try:
-            _ = stub.DeleteLock(Lock(key=key))
-        except grpc.RpcError as e:
-            if grpc.StatusCode.NOT_FOUND == e.code():
-                print(f"Lock by the name {key} does not exist")
-                return
-            raise
-        print("Lock deleted")
+    distlock = Distlock(address, port)
+    try:
+        distlock.delete_lock(key)
+    except NotFoundError:
+        print(f"Lock by the name {key} does not exist")
+        return
+    print("Lock deleted")
 
 
 if __name__ == "__main__":

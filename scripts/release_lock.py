@@ -1,25 +1,19 @@
 import sys
 
-import grpc
-
-from distlock.stubs.distlock_pb2 import Lock
-from distlock.stubs.distlock_pb2_grpc import DistlockStub
+from distlock import Distlock, Lock, NotFoundError, UnreleasableError
 
 
 def run(address: str = "[::]", port: int = 50051, key: str = "a_lock", clock: int = 1):
-    with grpc.insecure_channel(f"{address}:{port}") as channel:
-        stub = DistlockStub(channel)
-        try:
-            stub.ReleaseLock(Lock(key=key, clock=clock))
-        except grpc.RpcError as e:
-            if grpc.StatusCode.ABORTED == e.code():
-                print(e.details())
-                return
-            if grpc.StatusCode.NOT_FOUND == e.code():
-                print(f"Lock by the name {key} does not exist")
-                return
-            raise
-        print(f"Lock by the name {key} has been released")
+    distlock = Distlock(address, port)
+    try:
+        distlock.release_lock(Lock(key=key, clock=clock))
+    except NotFoundError:
+        print(f"Lock by the name {key} does not exist")
+        return
+    except UnreleasableError as e:
+        print(e)
+        return
+    print(f"Lock by the name {key} has been released")
 
 
 if __name__ == "__main__":

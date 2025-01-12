@@ -1,9 +1,6 @@
 import sys
 
-import grpc
-
-from distlock.stubs.distlock_pb2 import AcquireLockRequest
-from distlock.stubs.distlock_pb2_grpc import DistlockStub
+from distlock import Distlock, NotFoundError
 
 
 def run(
@@ -11,32 +8,32 @@ def run(
     port: int = 50051,
     key: str = "a_lock",
     expires_in_seconds: int = 0,
+    blocking: bool = True,
 ):
-    with grpc.insecure_channel(f"{address}:{port}") as channel:
-        stub = DistlockStub(channel)
-        try:
-            lock = stub.AcquireLock(
-                AcquireLockRequest(key=key, expires_in_seconds=expires_in_seconds)
-            )
-        except grpc.RpcError as e:
-            if grpc.StatusCode.NOT_FOUND == e.code():
-                print(f"Lock by the name {key} does not exist")
-                return
-            raise
-        if lock.acquired:
-            print(f"Lock {key} acquired:\n{lock}")
-        else:
-            print(
-                f"Lock by the name {key} is acquired by someone else. Will be available at {lock.expires_at.ToDatetime()}"
-            )
+    distlock = Distlock(address, port)
+    try:
+        lock = distlock.acquire_lock(
+            key=key,
+            expires_in_seconds=expires_in_seconds,
+            blocking=blocking,
+        )
+    except NotFoundError:
+        print(f"Lock by the name {key} does not exist")
+        return
+    print(f"Lock {key} acquired:n{lock}")
 
 
 if __name__ == "__main__":
     key = "a_lock"
     expires_in_seconds = 0
+    blocking = True
     if len(sys.argv) == 2:
         key = sys.argv[1]
     elif len(sys.argv) == 3:
         key = sys.argv[1]
         expires_in_seconds = int(sys.argv[2])
-    run(key=key, expires_in_seconds=expires_in_seconds)
+    elif len(sys.argv) == 4:
+        key = sys.argv[1]
+        expires_in_seconds = int(sys.argv[2])
+        blocking = bool(sys.argv[3])
+    run(key=key, expires_in_seconds=expires_in_seconds, blocking=blocking)
