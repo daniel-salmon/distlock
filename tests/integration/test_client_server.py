@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from distlock import Distlock, UnreleasableError
+from distlock import Distlock, NotFoundError, UnreleasableError
 
 from .conftest import cleanup
 
@@ -181,9 +181,19 @@ def test_multiple_clients(distlock_server: subprocess.Popen) -> None:
     def client(key: str) -> None:
         distlock = Distlock()
         distlock.create_lock(key)
+        lock = distlock.get_lock(key)
+        assert not lock.acquired
+        assert lock.clock == 0
         lock = distlock.acquire_lock(key, expires_in_seconds=1)
+        assert lock.acquired
+        assert lock.clock == 1
         distlock.release_lock(lock)
+        lock = distlock.get_lock(key)
+        assert not lock.acquired
+        assert lock.clock == 1
         distlock.delete_lock(key)
+        with pytest.raises(NotFoundError):
+            distlock.get_lock(key)
 
     with ThreadPoolExecutor(max_workers=3) as executor:
         results = executor.map(client, ["key1", "key2", "key3"])
