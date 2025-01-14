@@ -60,12 +60,14 @@ def test_acquire_and_release_locks(create_locks: list[str], distlock: Distlock) 
     assert all(not lock.acquired for lock in locks)
 
 
-# This simulates a case where a client attempts to release a lock that,
-# according to the server, the client may no longer hold, since the client's
-# clock for the lock is out of sync. The client should be made aware that the
-# lock they just attempted to release could not be released because they
-# did not hold the lock.
 def test_bad_release(create_locks: list[str], distlock: Distlock) -> None:
+    """
+    This simulates a case where a client attempts to release a lock that,
+    according to the server, the client may no longer hold, since the client's
+    clock for the lock is out of sync. The client should be made aware that the
+    lock they just attempted to release could not be released because they
+    did not hold the lock.
+    """
     locks = [distlock.get_lock(key) for key in create_locks]
     assert all(lock.clock == 0 for lock in locks)
     for lock in locks:
