@@ -4,7 +4,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from distlock import Distlock, NotFoundError, UnreleasableError
+from distlock import (
+    AlreadyExistsError,
+    Distlock,
+    Lock,
+    NotFoundError,
+    UnreleasableError,
+)
 
 from .conftest import cleanup
 
@@ -28,10 +34,25 @@ def test_create_locks(keys: list[str], distlock: Distlock) -> None:
     cleanup(distlock, keys=keys)
 
 
+def test_create_lock_that_exists(create_locks: list[str], distlock: Distlock) -> None:
+    for key in create_locks:
+        with pytest.raises(AlreadyExistsError):
+            distlock.create_lock(key)
+
+
 def test_get_lock(create_locks: list[str], distlock: Distlock) -> None:
     for key in create_locks:
         lock = distlock.get_lock(key)
         assert lock.key == key
+
+
+@pytest.mark.parametrize("key", ["not-a-key-1", "not-a-key-2", "not-a-key-3"])
+def test_get_lock_that_does_not_exist(
+    key: str, create_locks: list[str], distlock: Distlock
+) -> None:
+    assert key not in create_locks
+    with pytest.raises(NotFoundError):
+        _ = distlock.get_lock(key)
 
 
 def test_list_locks(create_locks: list[str], distlock: Distlock) -> None:
@@ -46,9 +67,27 @@ def test_delete_locks(create_locks: list[str], distlock: Distlock) -> None:
             distlock.get_lock(key)
 
 
+@pytest.mark.parametrize("key", ["not-a-key-1", "not-a-key-2", "not-a-key-3"])
+def test_delete_lock_that_does_not_exist(
+    key: str, create_locks: list[str], distlock: Distlock
+) -> None:
+    assert key not in create_locks
+    with pytest.raises(NotFoundError):
+        distlock.delete_lock(key)
+
+
 def test_acquire_locks(create_locks: list[str], distlock: Distlock) -> None:
     locks = [distlock.acquire_lock(key, expires_in_seconds=1) for key in create_locks]
     assert all(lock.acquired for lock in locks)
+
+
+@pytest.mark.parametrize("key", ["not-a-key-1", "not-a-key-2", "not-a-key-3"])
+def test_acquire_lock_that_does_not_exist(
+    key: str, create_locks: list[str], distlock: Distlock
+) -> None:
+    assert key not in create_locks
+    with pytest.raises(NotFoundError):
+        _ = distlock.acquire_lock(key, expires_in_seconds=1)
 
 
 def test_acquire_and_release_locks(create_locks: list[str], distlock: Distlock) -> None:
@@ -60,7 +99,18 @@ def test_acquire_and_release_locks(create_locks: list[str], distlock: Distlock) 
     assert all(not lock.acquired for lock in locks)
 
 
-def test_bad_release(create_locks: list[str], distlock: Distlock) -> None:
+@pytest.mark.parametrize("key", ["not-a-key-1", "not-a-key-2", "not-a-key-3"])
+def test_release_lock_that_does_not_exist(
+    key: str, create_locks: list[str], distlock: Distlock
+) -> None:
+    assert key not in create_locks
+    with pytest.raises(NotFoundError):
+        distlock.release_lock(Lock(key=key))
+
+
+def test_release_lock_that_doest_not_exist(
+    create_locks: list[str], distlock: Distlock
+) -> None:
     """
     This simulates a case where a client attempts to release a lock that,
     according to the server, the client may no longer hold, since the client's
