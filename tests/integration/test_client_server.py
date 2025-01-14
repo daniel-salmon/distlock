@@ -42,6 +42,8 @@ def test_list_locks(create_locks: list[str], distlock: Distlock) -> None:
 def test_delete_locks(create_locks: list[str], distlock: Distlock) -> None:
     for key in create_locks:
         distlock.delete_lock(key)
+        with pytest.raises(NotFoundError):
+            distlock.get_lock(key)
 
 
 def test_acquire_locks(create_locks: list[str], distlock: Distlock) -> None:
