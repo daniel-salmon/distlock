@@ -87,6 +87,9 @@ class Distlock:
                         f"Lock by the name {key} does not exist on the server"
                     )
                 raise
+        # Set `distlock` as the reference to the client that returns this lock object.
+        # This ensures that users can use the lock with a context manager.
+        lock.distlock = self
         return lock
 
     def list_locks(self) -> list[Lock]:

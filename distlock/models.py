@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
+from types import TracebackType
 from typing import Self
 
 from google.protobuf.timestamp_pb2 import Timestamp
 from pydantic import BaseModel
 
+from .client import Distlock
 from .exceptions import UnreleasableError
 from .stubs import distlock_pb2
 
@@ -20,6 +24,28 @@ class Lock(BaseModel):
     acquired: bool = False
     clock: int = 0
     expires_at: datetime = EPOCH_START
+    distlock: Distlock | None = None
+    acquired_lock: Lock | None = None
+
+    def __enter__(self) -> None:
+        assert self.distlock is not None
+        self.acquired_lock = self.distlock.acquire_lock(
+            key=self.key,
+            expires_in_seconds=3,
+            blocking=True,
+        )
+
+    def __exit__(
+        self,
+        exc_type: BaseException | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        assert self.acquired_lock is not None
+        assert self.distlock is not None
+        self.distlock.release_lock(self.acquired_lock)
+        self.distlock = None
+        self.acquired_lock = None
 
     def acquire(self, expires_in_seconds: int) -> None:
         self.acquired = True
