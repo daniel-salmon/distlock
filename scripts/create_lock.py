@@ -1,22 +1,16 @@
 import sys
 
-import grpc
-
-from distlock.stubs.distlock_pb2 import Lock
-from distlock.stubs.distlock_pb2_grpc import DistlockStub
+from distlock import AlreadyExistsError, Distlock
 
 
 def run(address: str = "[::]", port: int = 50051, key: str = "a_lock"):
-    with grpc.insecure_channel(f"{address}:{port}") as channel:
-        stub = DistlockStub(channel)
-        try:
-            _ = stub.CreateLock(Lock(key=key))
-        except grpc.RpcError as e:
-            if grpc.StatusCode.ALREADY_EXISTS == e.code():
-                print(f"Lock by the name {key} already exists")
-                return
-            raise
-        print(f"Lock {key} created")
+    distlock = Distlock(address, port)
+    try:
+        distlock.create_lock(key)
+    except AlreadyExistsError:
+        print(f"Lock by the name {key} already exists on the server")
+        return
+    print(f"Lock {key} created")
 
 
 if __name__ == "__main__":
