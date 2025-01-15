@@ -27,13 +27,14 @@ class Lock(BaseModel):
     distlock: Distlock | None = None
     acquired_lock: Lock | None = None
 
-    def __enter__(self) -> None:
+    def __enter__(self) -> Lock:
         assert self.distlock is not None
         self.acquired_lock = self.distlock.acquire_lock(
             key=self.key,
             expires_in_seconds=3,
             blocking=True,
         )
+        return self.acquired_lock
 
     def __exit__(
         self,
