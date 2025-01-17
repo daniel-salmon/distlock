@@ -31,6 +31,8 @@ def test_create_lock(key: str, distlock: Distlock) -> None:
 def test_create_locks(keys: list[str], distlock: Distlock) -> None:
     for key in keys:
         distlock.create_lock(key)
+    lock_keys = {lock.key for lock in distlock.list_locks()}
+    assert all(key in lock_keys for key in keys)
     cleanup(distlock, keys=keys)
 
 

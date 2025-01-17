@@ -8,6 +8,7 @@ dependencies = [
     "grpcio>=1.68.1",
     "grpcio-tools>=1.68.1",
     "pydantic>=2.10.4",
+    "pytest-asyncio>=0.25.2",
 ]
 
 [dependency-groups]
