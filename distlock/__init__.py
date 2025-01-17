@@ -1,4 +1,4 @@
-from .client import Distlock
+from .client import Distlock, DistlockAsync
 from .exceptions import (
     AlreadyAcquiredError,
     AlreadyExistsError,
@@ -9,6 +9,7 @@ from .models import Lock
 
 __all__ = [
     "Distlock",
+    "DistlockAsync",
     "AlreadyAcquiredError",
     "AlreadyExistsError",
     "Lock",

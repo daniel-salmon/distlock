@@ -135,7 +135,7 @@ class DistlockAsync:
             heartbeat_seconds = min(heartbeat_seconds, timeout_seconds)
         else:
             timeout = float("inf")
-        async with grpc.insecure_channel(self._address) as channel:
+        async with grpc.aio.insecure_channel(self._address) as channel:
             stub = DistlockStub(channel)
             while True:
                 try:
@@ -207,7 +207,7 @@ class DistlockAsync:
         return locks
 
     async def release_lock(self, lock: Lock) -> None:
-        async with grpc.insecure_channel(self._address) as channel:
+        async with grpc.aio.insecure_channel(self._address) as channel:
             stub = DistlockStub(channel)
             try:
                 _ = await stub.ReleaseLock(lock.to_pb())
