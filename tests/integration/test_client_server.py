@@ -110,9 +110,7 @@ def test_release_lock_that_does_not_exist(
         distlock.release_lock(Lock(key=key))
 
 
-def test_release_lock_that_doest_not_exist(
-    create_locks: list[str], distlock: Distlock
-) -> None:
+def test_release_lock_out_of_sync(create_locks: list[str], distlock: Distlock) -> None:
     """
     This simulates a case where a client attempts to release a lock that,
     according to the server, the client may no longer hold, since the client's
@@ -147,41 +145,44 @@ def test_acquire_lock_no_blocking(create_locks: list[str], distlock: Distlock) -
         lock = distlock.get_lock(key)
         assert lock.acquired
         assert lock.clock == 1
+        start = time.time()
         unacquired_lock = distlock.acquire_lock(
             key=key,
             expires_in_seconds=60,
             blocking=False,
         )
+        elapsed = time.time() - start
         assert not unacquired_lock.acquired
+        assert elapsed < 1.0
 
 
 def test_acquire_lock_blocking(create_locks: list[str], distlock: Distlock) -> None:
     for key in create_locks:
-        start = time.time()
         distlock.acquire_lock(key, expires_in_seconds=3)
         lock = distlock.get_lock(key)
         assert lock.acquired
         assert lock.clock == 1
+        start = time.time()
         acquired_lock = distlock.acquire_lock(
             key=key,
             expires_in_seconds=3,
             blocking=True,
         )
         elapsed = time.time() - start
-        assert elapsed > 2.0
         assert acquired_lock.acquired
         assert acquired_lock.clock == 2
+        assert elapsed > 2.0
 
 
 def test_acquire_lock_blocking_heartbeats(
     create_locks: list[str], distlock: Distlock
 ) -> None:
     for key in create_locks:
-        start = time.time()
         distlock.acquire_lock(key, expires_in_seconds=5)
         lock = distlock.get_lock(key)
         assert lock.acquired
         assert lock.clock == 1
+        start = time.time()
         acquired_lock = distlock.acquire_lock(
             key=key,
             expires_in_seconds=5,
@@ -190,9 +191,9 @@ def test_acquire_lock_blocking_heartbeats(
             heartbeat_seconds=1,
         )
         elapsed = time.time() - start
-        assert elapsed > 4.0
         assert acquired_lock.acquired
         assert acquired_lock.clock == 2
+        assert elapsed > 4.0
 
 
 def test_acquire_lock_blocking_timeout(
