@@ -213,7 +213,7 @@ def test_acquire_lock_blocking_timeout(
             )
 
 
-def test_acquire_release_acquire_cycle(
+def test_acquire_release_cycle_clock_updates(
     create_locks: list[str], distlock: Distlock
 ) -> None:
     locks = [distlock.acquire_lock(key, expires_in_seconds=3) for key in create_locks]

@@ -266,7 +266,7 @@ async def test_acquire_lock_blocking_timeout_async(
 
 
 @pytest.mark.asyncio
-async def test_acquire_release_acquire_cycle(
+async def test_acquire_release_cycle_clock_updates(
     create_locks: list[str], distlock_async: DistlockAsync
 ) -> None:
     locks = await asyncio.gather(
