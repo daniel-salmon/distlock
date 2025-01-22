@@ -1,18 +1,19 @@
+import asyncio
 import sys
 
-from distlock import Distlock, NotFoundError
+from distlock import DistlockAsync, NotFoundError
 
 
-def run(
+async def run(
     address: str = "[::]",
     port: int = 50051,
     key: str = "a_lock",
     expires_in_seconds: int = 0,
     blocking: bool = True,
 ):
-    distlock = Distlock(address, port)
+    distlock = DistlockAsync(address, port)
     try:
-        lock = distlock.acquire_lock(
+        lock = await distlock.acquire_lock(
             key=key,
             expires_in_seconds=expires_in_seconds,
             blocking=blocking,
@@ -36,4 +37,4 @@ if __name__ == "__main__":
         key = sys.argv[1]
         expires_in_seconds = int(sys.argv[2])
         blocking = bool(sys.argv[3])
-    run(key=key, expires_in_seconds=expires_in_seconds, blocking=blocking)
+    asyncio.run(run(key=key, expires_in_seconds=expires_in_seconds, blocking=blocking))
