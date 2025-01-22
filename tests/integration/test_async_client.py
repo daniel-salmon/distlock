@@ -103,7 +103,7 @@ async def test_acquire_locks_async(
 ) -> None:
     locks = await asyncio.gather(
         *[
-            distlock_async.acquire_lock(key, expires_in_seconds=1)
+            distlock_async.acquire_lock(key=key, expires_in_seconds=1)
             for key in create_locks
         ]
     )
@@ -117,7 +117,7 @@ async def test_acquire_lock_that_does_not_exist_async(
 ) -> None:
     assert key not in create_locks
     with pytest.raises(NotFoundError):
-        _ = await distlock_async.acquire_lock(key, expires_in_seconds=1)
+        _ = await distlock_async.acquire_lock(key=key, expires_in_seconds=1)
 
 
 @pytest.mark.asyncio
@@ -126,7 +126,7 @@ async def test_acquire_and_release_locks_async(
 ) -> None:
     locks = await asyncio.gather(
         *[
-            distlock_async.acquire_lock(key, expires_in_seconds=1)
+            distlock_async.acquire_lock(key=key, expires_in_seconds=1)
             for key in create_locks
         ]
     )
@@ -188,7 +188,7 @@ async def test_acquire_lock_no_blocking_async(
     create_locks: list[str], distlock_async: DistlockAsync
 ) -> None:
     for key in create_locks:
-        await distlock_async.acquire_lock(key, expires_in_seconds=60)
+        await distlock_async.acquire_lock(key=key, expires_in_seconds=60)
         lock = await distlock_async.get_lock(key)
         assert lock.acquired
         assert lock.clock == 1
@@ -208,7 +208,7 @@ async def test_acquire_lock_blocking_async(
     create_locks: list[str], distlock_async: DistlockAsync
 ) -> None:
     for key in create_locks:
-        await distlock_async.acquire_lock(key, expires_in_seconds=3)
+        await distlock_async.acquire_lock(key=key, expires_in_seconds=3)
         lock = await distlock_async.get_lock(key)
         assert lock.acquired
         assert lock.clock == 1
@@ -229,7 +229,7 @@ async def test_acquire_lock_blocking_heartbeats_async(
     create_locks: list[str], distlock_async: DistlockAsync
 ) -> None:
     for key in create_locks:
-        await distlock_async.acquire_lock(key, expires_in_seconds=5)
+        await distlock_async.acquire_lock(key=key, expires_in_seconds=5)
         lock = await distlock_async.get_lock(key)
         assert lock.acquired
         assert lock.clock == 1
@@ -252,7 +252,7 @@ async def test_acquire_lock_blocking_timeout_async(
     create_locks: list[str], distlock_async: DistlockAsync
 ) -> None:
     for key in create_locks:
-        await distlock_async.acquire_lock(key, expires_in_seconds=3)
+        await distlock_async.acquire_lock(key=key, expires_in_seconds=3)
         lock = await distlock_async.get_lock(key)
         assert lock.acquired
         assert lock.clock == 1
@@ -271,7 +271,7 @@ async def test_acquire_release_cycle_clock_updates(
 ) -> None:
     locks = await asyncio.gather(
         *[
-            distlock_async.acquire_lock(key, expires_in_seconds=3)
+            distlock_async.acquire_lock(key=key, expires_in_seconds=3)
             for key in create_locks
         ]
     )
@@ -286,7 +286,7 @@ async def test_acquire_release_cycle_clock_updates(
     assert all(lock.clock == 1 for lock in locks)
     locks = await asyncio.gather(
         *[
-            distlock_async.acquire_lock(key, expires_in_seconds=3)
+            distlock_async.acquire_lock(key=key, expires_in_seconds=3)
             for key in create_locks
         ]
     )

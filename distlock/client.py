@@ -15,6 +15,7 @@ class Distlock:
 
     def acquire_lock(
         self,
+        *,
         key: str,
         expires_in_seconds: int,
         blocking: bool = True,
@@ -121,6 +122,7 @@ class DistlockAsync:
 
     async def acquire_lock(
         self,
+        *,
         key: str,
         expires_in_seconds: int,
         blocking: bool = True,

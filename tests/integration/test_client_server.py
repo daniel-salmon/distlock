@@ -79,7 +79,9 @@ def test_delete_lock_that_does_not_exist(
 
 
 def test_acquire_locks(create_locks: list[str], distlock: Distlock) -> None:
-    locks = [distlock.acquire_lock(key, expires_in_seconds=1) for key in create_locks]
+    locks = [
+        distlock.acquire_lock(key=key, expires_in_seconds=1) for key in create_locks
+    ]
     assert all(lock.acquired for lock in locks)
 
 
@@ -89,11 +91,13 @@ def test_acquire_lock_that_does_not_exist(
 ) -> None:
     assert key not in create_locks
     with pytest.raises(NotFoundError):
-        _ = distlock.acquire_lock(key, expires_in_seconds=1)
+        _ = distlock.acquire_lock(key=key, expires_in_seconds=1)
 
 
 def test_acquire_and_release_locks(create_locks: list[str], distlock: Distlock) -> None:
-    locks = [distlock.acquire_lock(key, expires_in_seconds=1) for key in create_locks]
+    locks = [
+        distlock.acquire_lock(key=key, expires_in_seconds=1) for key in create_locks
+    ]
     assert all(lock.acquired for lock in locks)
     for lock in locks:
         distlock.release_lock(lock)
@@ -141,7 +145,7 @@ def test_release_lock_out_of_sync(create_locks: list[str], distlock: Distlock) -
 
 def test_acquire_lock_no_blocking(create_locks: list[str], distlock: Distlock) -> None:
     for key in create_locks:
-        distlock.acquire_lock(key, expires_in_seconds=60)
+        distlock.acquire_lock(key=key, expires_in_seconds=60)
         lock = distlock.get_lock(key)
         assert lock.acquired
         assert lock.clock == 1
@@ -158,7 +162,7 @@ def test_acquire_lock_no_blocking(create_locks: list[str], distlock: Distlock) -
 
 def test_acquire_lock_blocking(create_locks: list[str], distlock: Distlock) -> None:
     for key in create_locks:
-        distlock.acquire_lock(key, expires_in_seconds=3)
+        distlock.acquire_lock(key=key, expires_in_seconds=3)
         lock = distlock.get_lock(key)
         assert lock.acquired
         assert lock.clock == 1
@@ -178,7 +182,7 @@ def test_acquire_lock_blocking_heartbeats(
     create_locks: list[str], distlock: Distlock
 ) -> None:
     for key in create_locks:
-        distlock.acquire_lock(key, expires_in_seconds=5)
+        distlock.acquire_lock(key=key, expires_in_seconds=5)
         lock = distlock.get_lock(key)
         assert lock.acquired
         assert lock.clock == 1
@@ -200,7 +204,7 @@ def test_acquire_lock_blocking_timeout(
     create_locks: list[str], distlock: Distlock
 ) -> None:
     for key in create_locks:
-        distlock.acquire_lock(key, expires_in_seconds=3)
+        distlock.acquire_lock(key=key, expires_in_seconds=3)
         lock = distlock.get_lock(key)
         assert lock.acquired
         assert lock.clock == 1
@@ -216,7 +220,9 @@ def test_acquire_lock_blocking_timeout(
 def test_acquire_release_cycle_clock_updates(
     create_locks: list[str], distlock: Distlock
 ) -> None:
-    locks = [distlock.acquire_lock(key, expires_in_seconds=3) for key in create_locks]
+    locks = [
+        distlock.acquire_lock(key=key, expires_in_seconds=3) for key in create_locks
+    ]
     assert all(lock.acquired for lock in locks)
     assert all(lock.clock == 1 for lock in locks)
     for lock in locks:
@@ -224,7 +230,9 @@ def test_acquire_release_cycle_clock_updates(
     locks = [distlock.get_lock(key) for key in create_locks]
     assert all(not lock.acquired for lock in locks)
     assert all(lock.clock == 1 for lock in locks)
-    locks = [distlock.acquire_lock(key, expires_in_seconds=3) for key in create_locks]
+    locks = [
+        distlock.acquire_lock(key=key, expires_in_seconds=3) for key in create_locks
+    ]
     assert all(lock.acquired for lock in locks)
     assert all(lock.clock == 2 for lock in locks)
     for lock in locks:
@@ -241,7 +249,7 @@ def test_multiple_clients(distlock_server: subprocess.Popen) -> None:
         lock = distlock.get_lock(key)
         assert not lock.acquired
         assert lock.clock == 0
-        lock = distlock.acquire_lock(key, expires_in_seconds=1)
+        lock = distlock.acquire_lock(key=key, expires_in_seconds=1)
         assert lock.acquired
         assert lock.clock == 1
         distlock.release_lock(lock)
