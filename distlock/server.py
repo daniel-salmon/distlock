@@ -128,7 +128,7 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
         return distlock_pb2.EmptyResponse()
 
 
-def serve(address: str = "[::]", port: int = 50051, max_workers: int = 5):
+def serve(*, address: str, port: int, max_workers: int):
     server = grpc.server(ThreadPoolExecutor(max_workers=max_workers))
     distlock_pb2_grpc.add_DistlockServicer_to_server(Servicer(), server)
     server.add_insecure_port(f"{address}:{port}")

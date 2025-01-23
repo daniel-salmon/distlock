@@ -3,6 +3,7 @@ from typing import Annotated
 import typer
 
 from . import __version__
+from .server import serve
 
 app = typer.Typer()
 
@@ -30,4 +31,8 @@ def run(
     if version:
         print(f"{__version__}")
         raise typer.Exit()
-    print("here")
+    if run_async:
+        print("Not implemented")
+        raise typer.Exit(1)
+    else:
+        serve(address=address, port=port, max_workers=max_workers)
