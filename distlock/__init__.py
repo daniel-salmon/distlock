@@ -16,3 +16,5 @@ __all__ = [
     "NotFoundError",
     "UnreleasableError",
 ]
+
+__version__ = "0.1.0"
