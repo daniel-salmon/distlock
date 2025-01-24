@@ -26,3 +26,6 @@ dev = [
 [tool.ruff]
 force-exclude = true
 exclude = ["distlock/stubs/*"]
+
+[tool.setuptools.packages.find]
+include = ["distlock"]
