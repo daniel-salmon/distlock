@@ -67,7 +67,7 @@ async def serve(
 
     async def server_graceful_shutdown():
         logger.info("Starting graceful shutdown")
-        await server.stop(1)
+        await server.stop(graceful_shutdown_period_seconds)
 
     cleanup_coroutines.append(server_graceful_shutdown())
 
