@@ -1,8 +1,10 @@
+import asyncio
 from typing import Annotated
 
 import typer
 
 from . import __version__
+from .async_server import serve as serve_async
 from .server import serve
 
 app = typer.Typer()
@@ -32,7 +34,6 @@ def run(
         print(f"{__version__}")
         raise typer.Exit()
     if run_async:
-        print("Not implemented")
-        raise typer.Exit(1)
+        asyncio.run(serve_async(address=address, port=port))
     else:
         serve(address=address, port=port, max_workers=max_workers)

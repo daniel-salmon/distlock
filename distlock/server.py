@@ -132,6 +132,6 @@ def serve(*, address: str, port: int, max_workers: int):
     server = grpc.server(ThreadPoolExecutor(max_workers=max_workers))
     distlock_pb2_grpc.add_DistlockServicer_to_server(Servicer(), server)
     server.add_insecure_port(f"{address}:{port}")
+    logger.info(f"Starting server on {address}:{port}")
     server.start()
-    logger.info(f"Server started on {address}:{port}")
     server.wait_for_termination()
