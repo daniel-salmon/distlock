@@ -1,5 +1,5 @@
 import asyncio
-from typing import Annotated
+from typing import Annotated, Awaitable
 
 import typer
 
@@ -33,7 +33,19 @@ def run(
     if version:
         print(f"{__version__}")
         raise typer.Exit()
-    if run_async:
-        asyncio.run(serve_async(address=address, port=port))
-    else:
+    if not run_async:
         serve(address=address, port=port, max_workers=max_workers)
+    else:
+        loop = asyncio.get_event_loop()
+        cleanup_coroutines: list[Awaitable] = []
+        try:
+            loop.run_until_complete(
+                serve_async(
+                    address=address,
+                    port=port,
+                    cleanup_coroutines=cleanup_coroutines,
+                )
+            )
+        finally:
+            loop.run_until_complete(*cleanup_coroutines)
+            loop.close()

@@ -52,10 +52,23 @@ class AsyncServicer(distlock_pb2_grpc.DistlockServicer):
         return distlock_pb2.EmptyResponse()
 
 
-async def serve(*, address: str, port: int):
+async def serve(
+    *,
+    address: str,
+    port: int,
+    cleanup_coroutines: list,
+    graceful_shutdown_period_seconds: float = 1,
+):
     server = grpc.aio.server()
     distlock_pb2_grpc.add_DistlockServicer_to_server(AsyncServicer(), server)
     server.add_insecure_port(f"{address}:{port}")
     logger.info(f"Starting server on {address}:{port}")
     await server.start()
+
+    async def server_graceful_shutdown():
+        logger.info("Starting graceful shutdown")
+        await server.stop(1)
+
+    cleanup_coroutines.append(server_graceful_shutdown())
+
     await server.wait_for_termination()
