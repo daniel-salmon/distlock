@@ -9,7 +9,7 @@ class Store(TypedDict):
     key: Lock
 
 
-class LockStore:
+class ThreadSafeLockStore:
     def __init__(self):
         self._lock = threading.Lock()
         self._store = Store()

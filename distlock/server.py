@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 import grpc
 
 from .exceptions import AlreadyExistsError, UnreleasableError
-from .lock_store import LockStore
+from .lock_store import ThreadSafeLockStore
 from .models import Lock
 from .stubs import distlock_pb2, distlock_pb2_grpc
 
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class Servicer(distlock_pb2_grpc.DistlockServicer):
     def __init__(self):
-        self.lock_store = LockStore()
+        self.lock_store = ThreadSafeLockStore()
 
     def CreateLock(
         self, request: distlock_pb2.Lock, context: grpc.ServicerContext

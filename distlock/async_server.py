@@ -2,7 +2,7 @@ import logging
 
 import grpc
 
-from .lock_store import LockStore
+from .lock_store import ThreadSafeLockStore
 from .stubs import distlock_pb2, distlock_pb2_grpc
 
 ONE_MINUTE_IN_SECONDS = 1 * 60
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class AsyncServicer(distlock_pb2_grpc.DistlockServicer):
     def __init__(self):
-        self.lock_store = LockStore()
+        self.lock_store = ThreadSafeLockStore()
 
     async def CreateLock(
         self, request: distlock_pb2.Lock, context: grpc.aio.ServicerContext
