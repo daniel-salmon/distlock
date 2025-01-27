@@ -10,7 +10,7 @@ from distlock import (
 )
 from distlock.exceptions import UnreleasableError
 
-from .conftest import cleanup_async
+from .conftest import cleanup_client_async
 
 
 @pytest.mark.asyncio
@@ -20,6 +20,9 @@ from .conftest import cleanup_async
         ("key", "distlock_client_async"),
         ("different key", "distlock_client_async"),
         ("one more key", "distlock_client_async"),
+        ("key", "distlock_async_client_async"),
+        ("different key", "distlock_async_client_async"),
+        ("one more key", "distlock_async_client_async"),
     ],
 )
 async def test_create_lock_async(
@@ -27,7 +30,7 @@ async def test_create_lock_async(
 ) -> None:
     distlock = request.getfixturevalue(client_str)
     await distlock.create_lock(key)
-    await cleanup_async(distlock, keys=[key])
+    await cleanup_client_async(distlock, keys=[key])
 
 
 @pytest.mark.asyncio
@@ -36,6 +39,8 @@ async def test_create_lock_async(
     [
         (["key1", "key2", "key3"], "distlock_client_async"),
         (["value1", "value2", "value3"], "distlock_client_async"),
+        (["key1", "key2", "key3"], "distlock_async_client_async"),
+        (["value1", "value2", "value3"], "distlock_async_client_async"),
     ],
 )
 async def test_create_locks_async(
@@ -47,14 +52,21 @@ async def test_create_locks_async(
     locks = await distlock.list_locks()
     lock_keys = {lock.key for lock in locks}
     assert all(key in lock_keys for key in keys)
-    await cleanup_async(distlock, keys=keys)
+    await cleanup_client_async(distlock, keys=keys)
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("client_str", ["distlock_client_async"])
+@pytest.mark.parametrize(
+    "create_locks_str, client_str",
+    [
+        ("create_locks", "distlock_client_async"),
+        ("create_locks_async", "distlock_async_client_async"),
+    ],
+)
 async def test_create_lock_that_exists_async(
-    create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     for key in create_locks:
         with pytest.raises(AlreadyExistsError):
@@ -62,10 +74,17 @@ async def test_create_lock_that_exists_async(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("client_str", ["distlock_client_async"])
+@pytest.mark.parametrize(
+    "create_locks_str, client_str",
+    [
+        ("create_locks", "distlock_client_async"),
+        ("create_locks_async", "distlock_async_client_async"),
+    ],
+)
 async def test_get_lock_async(
-    create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     for key in create_locks:
         lock = await distlock.get_lock(key)
@@ -74,16 +93,20 @@ async def test_get_lock_async(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "key, client_str",
+    "key, create_locks_str, client_str",
     [
-        ("not-a-key-1", "distlock_client_async"),
-        ("not-a-key-2", "distlock_client_async"),
-        ("not-a-key-3", "distlock_client_async"),
+        ("not-a-key-1", "create_locks", "distlock_client_async"),
+        ("not-a-key-2", "create_locks", "distlock_client_async"),
+        ("not-a-key-3", "create_locks", "distlock_client_async"),
+        ("not-a-key-1", "create_locks_async", "distlock_async_client_async"),
+        ("not-a-key-2", "create_locks_async", "distlock_async_client_async"),
+        ("not-a-key-3", "create_locks_async", "distlock_async_client_async"),
     ],
 )
 async def test_get_lock_that_does_not_exist_async(
-    key: str, create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    key: str, create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     assert key not in create_locks
     with pytest.raises(NotFoundError):
@@ -91,10 +114,17 @@ async def test_get_lock_that_does_not_exist_async(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("client_str", ["distlock_client_async"])
+@pytest.mark.parametrize(
+    "create_locks_str, client_str",
+    [
+        ("create_locks", "distlock_client_async"),
+        ("create_locks_async", "distlock_async_client_async"),
+    ],
+)
 async def test_list_locks_async(
-    create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     locks = await distlock.list_locks()
     all_keys = {lock.key for lock in locks}
@@ -102,10 +132,17 @@ async def test_list_locks_async(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("client_str", ["distlock_client_async"])
+@pytest.mark.parametrize(
+    "create_locks_str, client_str",
+    [
+        ("create_locks", "distlock_client_async"),
+        ("create_locks_async", "distlock_async_client_async"),
+    ],
+)
 async def test_delete_locks_async(
-    create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     for key in create_locks:
         await distlock.delete_lock(key)
@@ -115,16 +152,20 @@ async def test_delete_locks_async(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "key, client_str",
+    "key, create_locks_str, client_str",
     [
-        ("not-a-key-1", "distlock_client_async"),
-        ("not-a-key-2", "distlock_client_async"),
-        ("not-a-key-3", "distlock_client_async"),
+        ("not-a-key-1", "create_locks", "distlock_client_async"),
+        ("not-a-key-2", "create_locks", "distlock_client_async"),
+        ("not-a-key-3", "create_locks", "distlock_client_async"),
+        ("not-a-key-1", "create_locks_async", "distlock_async_client_async"),
+        ("not-a-key-2", "create_locks_async", "distlock_async_client_async"),
+        ("not-a-key-3", "create_locks_async", "distlock_async_client_async"),
     ],
 )
 async def test_delete_lock_that_does_not_exist_async(
-    key: str, create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    key: str, create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     assert key not in create_locks
     with pytest.raises(NotFoundError):
@@ -132,10 +173,17 @@ async def test_delete_lock_that_does_not_exist_async(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("client_str", ["distlock_client_async"])
+@pytest.mark.parametrize(
+    "create_locks_str, client_str",
+    [
+        ("create_locks", "distlock_client_async"),
+        ("create_locks_async", "distlock_async_client_async"),
+    ],
+)
 async def test_acquire_locks_async(
-    create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     locks = await asyncio.gather(
         *[distlock.acquire_lock(key=key, expires_in_seconds=1) for key in create_locks]
@@ -145,16 +193,20 @@ async def test_acquire_locks_async(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "key, client_str",
+    "key, create_locks_str, client_str",
     [
-        ("not-a-key-1", "distlock_client_async"),
-        ("not-a-key-2", "distlock_client_async"),
-        ("not-a-key-3", "distlock_client_async"),
+        ("not-a-key-1", "create_locks", "distlock_client_async"),
+        ("not-a-key-2", "create_locks", "distlock_client_async"),
+        ("not-a-key-3", "create_locks", "distlock_client_async"),
+        ("not-a-key-1", "create_locks_async", "distlock_async_client_async"),
+        ("not-a-key-2", "create_locks_async", "distlock_async_client_async"),
+        ("not-a-key-3", "create_locks_async", "distlock_async_client_async"),
     ],
 )
 async def test_acquire_lock_that_does_not_exist_async(
-    key: str, create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    key: str, create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     assert key not in create_locks
     with pytest.raises(NotFoundError):
@@ -162,10 +214,17 @@ async def test_acquire_lock_that_does_not_exist_async(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("client_str", ["distlock_client_async"])
+@pytest.mark.parametrize(
+    "create_locks_str, client_str",
+    [
+        ("create_locks", "distlock_client_async"),
+        ("create_locks_async", "distlock_async_client_async"),
+    ],
+)
 async def test_acquire_and_release_locks_async(
-    create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     locks = await asyncio.gather(
         *[distlock.acquire_lock(key=key, expires_in_seconds=1) for key in create_locks]
@@ -179,16 +238,20 @@ async def test_acquire_and_release_locks_async(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "key, client_str",
+    "key, create_locks_str, client_str",
     [
-        ("not-a-key-1", "distlock_client_async"),
-        ("not-a-key-2", "distlock_client_async"),
-        ("not-a-key-3", "distlock_client_async"),
+        ("not-a-key-1", "create_locks", "distlock_client_async"),
+        ("not-a-key-2", "create_locks", "distlock_client_async"),
+        ("not-a-key-3", "create_locks", "distlock_client_async"),
+        ("not-a-key-1", "create_locks_async", "distlock_async_client_async"),
+        ("not-a-key-2", "create_locks_async", "distlock_async_client_async"),
+        ("not-a-key-3", "create_locks_async", "distlock_async_client_async"),
     ],
 )
 async def test_release_lock_that_does_not_exist_async(
-    key: str, create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    key: str, create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     assert key not in create_locks
     with pytest.raises(NotFoundError):
@@ -196,9 +259,15 @@ async def test_release_lock_that_does_not_exist_async(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("client_str", ["distlock_client_async"])
+@pytest.mark.parametrize(
+    "create_locks_str, client_str",
+    [
+        ("create_locks", "distlock_client_async"),
+        ("create_locks_async", "distlock_async_client_async"),
+    ],
+)
 async def test_release_lock_out_of_sync_async(
-    create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
     """
     This simulates a case where a client attempts to release a lock that,
@@ -207,6 +276,7 @@ async def test_release_lock_out_of_sync_async(
     lock they just attempted to release could not be released because they
     did not hold the lock.
     """
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     locks = await asyncio.gather(*[distlock.get_lock(key) for key in create_locks])
     assert all(lock.clock == 0 for lock in locks)
@@ -230,10 +300,17 @@ async def test_release_lock_out_of_sync_async(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("client_str", ["distlock_client_async"])
+@pytest.mark.parametrize(
+    "create_locks_str, client_str",
+    [
+        ("create_locks", "distlock_client_async"),
+        ("create_locks_async", "distlock_async_client_async"),
+    ],
+)
 async def test_acquire_lock_no_blocking_async(
-    create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     for key in create_locks:
         await distlock.acquire_lock(key=key, expires_in_seconds=60)
@@ -252,10 +329,17 @@ async def test_acquire_lock_no_blocking_async(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("client_str", ["distlock_client_async"])
+@pytest.mark.parametrize(
+    "create_locks_str, client_str",
+    [
+        ("create_locks", "distlock_client_async"),
+        ("create_locks_async", "distlock_async_client_async"),
+    ],
+)
 async def test_acquire_lock_blocking_async(
-    create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     for key in create_locks:
         await distlock.acquire_lock(key=key, expires_in_seconds=3)
@@ -275,10 +359,17 @@ async def test_acquire_lock_blocking_async(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("client_str", ["distlock_client_async"])
+@pytest.mark.parametrize(
+    "create_locks_str, client_str",
+    [
+        ("create_locks", "distlock_client_async"),
+        ("create_locks_async", "distlock_async_client_async"),
+    ],
+)
 async def test_acquire_lock_blocking_heartbeats_async(
-    create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     for key in create_locks:
         await distlock.acquire_lock(key=key, expires_in_seconds=5)
@@ -300,10 +391,17 @@ async def test_acquire_lock_blocking_heartbeats_async(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("client_str", ["distlock_client_async"])
+@pytest.mark.parametrize(
+    "create_locks_str, client_str",
+    [
+        ("create_locks", "distlock_client_async"),
+        ("create_locks_async", "distlock_async_client_async"),
+    ],
+)
 async def test_acquire_lock_blocking_timeout_async(
-    create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     for key in create_locks:
         await distlock.acquire_lock(key=key, expires_in_seconds=3)
@@ -320,10 +418,17 @@ async def test_acquire_lock_blocking_timeout_async(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("client_str", ["distlock_client_async"])
+@pytest.mark.parametrize(
+    "create_locks_str, client_str",
+    [
+        ("create_locks", "distlock_client_async"),
+        ("create_locks_async", "distlock_async_client_async"),
+    ],
+)
 async def test_acquire_release_cycle_clock_updates(
-    create_locks: list[str], client_str: str, request: pytest.FixtureRequest
+    create_locks_str: str, client_str: str, request: pytest.FixtureRequest
 ) -> None:
+    create_locks = request.getfixturevalue(create_locks_str)
     distlock = request.getfixturevalue(client_str)
     locks = await asyncio.gather(
         *[distlock.acquire_lock(key=key, expires_in_seconds=3) for key in create_locks]

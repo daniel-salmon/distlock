@@ -82,6 +82,13 @@ def distlock_client_async(distlock_server: subprocess.Popen) -> DistlockAsync:
 
 
 @pytest.fixture(scope="function")
+def distlock_async_client_async(
+    distlock_server_async: subprocess.Popen,
+) -> DistlockAsync:
+    return DistlockAsync(port=50052)
+
+
+@pytest.fixture(scope="function")
 def create_locks(distlock: Distlock) -> Generator[list[str], None, None]:
     keys = ["key1", "key2", "key3"]
     for key in keys:
