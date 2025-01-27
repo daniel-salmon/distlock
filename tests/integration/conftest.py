@@ -72,6 +72,11 @@ def distlock(distlock_server: subprocess.Popen) -> Distlock:
 
 
 @pytest.fixture(scope="function")
+def distlock_async(distlock_server_async: subprocess.Popen) -> Distlock:
+    return Distlock(port=50052)
+
+
+@pytest.fixture(scope="function")
 def distlock_client_async(distlock_server: subprocess.Popen) -> DistlockAsync:
     return DistlockAsync()
 
@@ -85,6 +90,17 @@ def create_locks(distlock: Distlock) -> Generator[list[str], None, None]:
     cleanup(distlock, keys)
 
 
+@pytest.fixture(scope="function")
+def create_locks_async(
+    distlock_async: Distlock,
+) -> Generator[list[str], None, None]:
+    keys = ["key1", "key2", "key3"]
+    for key in keys:
+        distlock_async.create_lock(key)
+    yield keys
+    cleanup_async(distlock_async, keys)
+
+
 def cleanup(distlock: Distlock, keys: list[str]) -> None:
     for key in keys:
         try:
@@ -96,7 +112,20 @@ def cleanup(distlock: Distlock, keys: list[str]) -> None:
     assert len(lock_names) == len(lock_names - set(keys))
 
 
-async def cleanup_async(distlock_client_async: DistlockAsync, keys: list[str]) -> None:
+def cleanup_async(distlock_async: Distlock, keys: list[str]) -> None:
+    for key in keys:
+        try:
+            distlock_async.delete_lock(key)
+        except NotFoundError:
+            # The key may have already been deleted, which is fine
+            pass
+    lock_names = {lock.key for lock in distlock_async.list_locks()}
+    assert len(lock_names) == len(lock_names - set(keys))
+
+
+async def cleanup_client_async(
+    distlock_client_async: DistlockAsync, keys: list[str]
+) -> None:
     for key in keys:
         try:
             await distlock_client_async.delete_lock(key)
