@@ -1,5 +1,4 @@
 import logging
-from concurrent.futures import ThreadPoolExecutor
 
 import grpc
 
@@ -18,12 +17,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class Servicer(distlock_pb2_grpc.DistlockServicer):
+class AsyncServicer(distlock_pb2_grpc.DistlockServicer):
     def __init__(self):
         self.lock_store = ThreadSafeLockStore()
 
-    def CreateLock(
-        self, request: distlock_pb2.Lock, context: grpc.ServicerContext
+    async def CreateLock(
+        self, request: distlock_pb2.Lock, context: grpc.aio.ServicerContext
     ) -> distlock_pb2.EmptyResponse:
         logger.info(f"Received request to create lock named {request.key}")
         try:
@@ -40,8 +39,10 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
         logger.info(f"Created lock named {request.key}")
         return distlock_pb2.EmptyResponse()
 
-    def AcquireLock(
-        self, request: distlock_pb2.AcquireLockRequest, context: grpc.ServicerContext
+    async def AcquireLock(
+        self,
+        request: distlock_pb2.AcquireLockRequest,
+        context: grpc.aio.ServicerContext,
     ) -> distlock_pb2.Lock:
         logger.info(
             f"Received request to acquire lock named {request.key} with an expires in of {request.expires_in_seconds} seconds"
@@ -66,8 +67,8 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
         )
         return lock.to_pb()
 
-    def ReleaseLock(
-        self, request: distlock_pb2.Lock, context: grpc.ServicerContext
+    async def ReleaseLock(
+        self, request: distlock_pb2.Lock, context: grpc.aio.ServicerContext
     ) -> distlock_pb2.EmptyResponse:
         logger.info(f"Received request to release lock named {request.key}")
         try:
@@ -90,8 +91,8 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             return distlock_pb2.EmptyResponse()
         return distlock_pb2.EmptyResponse()
 
-    def GetLock(
-        self, request: distlock_pb2.Lock, context: grpc.ServicerContext
+    async def GetLock(
+        self, request: distlock_pb2.Lock, context: grpc.aio.ServicerContext
     ) -> distlock_pb2.Lock:
         logger.info(f"Received request to fetch lock named {request.key}")
         try:
@@ -105,15 +106,15 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
             return request
         return lock.to_pb()
 
-    def ListLocks(
-        self, request: distlock_pb2.EmptyRequest, context: grpc.ServicerContext
+    async def ListLocks(
+        self, request: distlock_pb2.EmptyRequest, context: grpc.aio.ServicerContext
     ) -> distlock_pb2.Locks:
         logger.info("Received request to list locks")
         locks = [lock.to_pb() for lock in self.lock_store.to_list()]
         return distlock_pb2.Locks(locks=locks)
 
-    def DeleteLock(
-        self, request: distlock_pb2.Lock, context: grpc.ServicerContext
+    async def DeleteLock(
+        self, request: distlock_pb2.Lock, context: grpc.aio.ServicerContext
     ) -> distlock_pb2.EmptyResponse:
         logger.info(f"Received request to delete lock with key {request.key}")
         try:
@@ -128,10 +129,23 @@ class Servicer(distlock_pb2_grpc.DistlockServicer):
         return distlock_pb2.EmptyResponse()
 
 
-def serve(*, address: str, port: int, max_workers: int):
-    server = grpc.server(ThreadPoolExecutor(max_workers=max_workers))
-    distlock_pb2_grpc.add_DistlockServicer_to_server(Servicer(), server)
+async def serve(
+    *,
+    address: str,
+    port: int,
+    cleanup_coroutines: list,
+    graceful_shutdown_period_seconds: float = 1,
+):
+    server = grpc.aio.server()
+    distlock_pb2_grpc.add_DistlockServicer_to_server(AsyncServicer(), server)
     server.add_insecure_port(f"{address}:{port}")
     logger.info(f"Starting server on {address}:{port}")
-    server.start()
-    server.wait_for_termination()
+    await server.start()
+
+    async def server_graceful_shutdown():
+        logger.info("Starting graceful shutdown")
+        await server.stop(graceful_shutdown_period_seconds)
+
+    cleanup_coroutines.append(server_graceful_shutdown())
+
+    await server.wait_for_termination()

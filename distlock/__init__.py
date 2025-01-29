@@ -1,3 +1,5 @@
+from importlib.metadata import distribution
+
 from .client import Distlock, DistlockAsync
 from .exceptions import (
     AlreadyAcquiredError,
@@ -16,3 +18,5 @@ __all__ = [
     "NotFoundError",
     "UnreleasableError",
 ]
+
+__version__ = distribution("distlock").version

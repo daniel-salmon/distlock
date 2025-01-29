@@ -1,3 +1,3 @@
-from .server import serve
+from .cli import app
 
-serve()
+app()
