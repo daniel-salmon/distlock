@@ -32,6 +32,3 @@ exclude = ["distlock/stubs/*"]
 
 [tool.setuptools]
 packages = ["distlock", "distlock.stubs"]
-
-[tool.setuptools.packages.find]
-include = ["distlock"]
