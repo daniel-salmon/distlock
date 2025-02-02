@@ -1,16 +1,22 @@
 # distlock
 Implements a distributed lock client and server.
 
+This is particularly useful for situations where you need efficiency gains when
+running tasks in a distributed environment, yet it is not catastrophic if
+multiple workers attempt to run the same task at the same time. If you have a
+workload that requires at most one worker to run a task at a time, you should
+use a different distributed lock implementation. Unfortunately, this project
+does not use replication / consensus on the backend, so if the server is
+unavailable, there is no fallback mechanism since there is only one server. Put
+differently, you should not use this for mission critical workloads.
+
 # Table of Contents
-- [Client](#client)
-- [Server](#server)
+
 - [Usage](#usage)
   - [Threaded Server](#threaded-server)
   - [Async Server](#async-server)
-
-## Client <a name="client"></a>
-
-## Server <a name="server"></a>
+- [Client](#client)
+- [Server](#server)
 
 ## Usage <a name="usage"></a>
 
@@ -21,7 +27,7 @@ The complete usage is:
 ```sh
 $ distlock --help
 
- Usage: python -m distlock [OPTIONS]
+ Usage: distlock [OPTIONS]
 
 ╭─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ --version               --no-version             Print the version number and exit [default: no-version]                             │
@@ -59,3 +65,72 @@ $ distlock --run-async
 The async server does not run multiple workers, it runs a single worker that
 handles all requests concurrently. Therefore the `--max-workers` flag is not
 used.
+
+
+## Client <a name="client"></a>
+
+The client is used to interact with the server. It can be used to create a new
+lock, acquire it, or release it. The client has an async implementation in
+situations where it needs to be used in an async context.
+
+The main workflow is:
+
+* Create a new lock: `distlock.create_lock(key="my_lock")`
+* Acquire the lock: `distlock.acquire_lock(key="my_lock", expires_in_seconds=5)`
+* Release the lock: `distlock.release_lock(Lock(key="my_lock"))`
+
+When attempting to acquire the lock, you have the choice to block by specifying
+`blocking=True`. By default blocking will happen indefinitely, however you can
+configure the `timeout_seconds` so that after that amount of time a
+`TimeoutError` will be raised. Specifying `heartbeat_seconds` will determine how
+often the client will query the server to check if the lock is available and can
+be acquired.
+
+A full example:
+
+```python
+import sys
+
+from distlock import Distlock
+
+distlock = Distlock(address="localhost", port=50051)
+distlock.create_lock(key="my_lock")
+
+# This will block for at most 10 seconds
+# If the lock is not available after 10 seconds, a TimeoutError will be raised
+try:
+    lock = distlock.acquire_lock(
+        key="my_lock",
+        expires_in_seconds=5,
+        blocking=True,
+        timeout_seconds=10,
+        heartbeat_seconds=5,
+    )
+except TimeoutError:
+    print("Could not acquire lock")
+    sys.exit(1)
+
+# Do some work
+# You have 5 seconds to do your work before the server will be able to lease the
+# lock to another worker
+
+# Release the lock
+distlock.release_lock(lock)
+```
+
+## Server <a name="server"></a>
+
+The server maintains a collection of all locks that have been created and allows
+workers to lease locks. Each lock maintains a logical, integer clock that gets
+incremented with every lease. When a client attempts to release a lock it
+presents the clock value it had when it leased the lock. This is useful because
+it is possible that client A leased the lock and was unable to release the lock
+before the lock expired. If client B leased the lock before client A could
+release it, client A will not be able to release the lock. The server can
+determine this by comparing the logical clock value whenever a client attempts
+to release a lock. In this case, when client B leased the lock, the server
+incremented the clock value to one more than the clock value client A had when
+it leased the lock. Then when client A attempts to release the lock, it will see
+that A's clock is behind and will not be able to release the lock. The client
+will obtain an `UnreleasableError` exception at release time in this situation
+so that it knows it no longer had exclusive access to the lock.
