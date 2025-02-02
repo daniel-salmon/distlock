@@ -123,14 +123,30 @@ distlock.release_lock(lock)
 The server maintains a collection of all locks that have been created and allows
 workers to lease locks. Each lock maintains a logical, integer clock that gets
 incremented with every lease. When a client attempts to release a lock it
-presents the clock value it had when it leased the lock. This is useful because
-it is possible that client A leased the lock and was unable to release the lock
-before the lock expired. If client B leased the lock before client A could
-release it, client A will not be able to release the lock. The server can
-determine this by comparing the logical clock value whenever a client attempts
-to release a lock. In this case, when client B leased the lock, the server
-incremented the clock value to one more than the clock value client A had when
-it leased the lock. Then when client A attempts to release the lock, it will see
-that A's clock is behind and will not be able to release the lock. The client
-will obtain an `UnreleasableError` exception at release time in this situation
-so that it knows it no longer had exclusive access to the lock.
+presents the clock value it had when it leased the lock. The clock value is used
+by the server to determine if the lock can be released by that client -- if the
+lock was expired by the time the client requests to release the lock, it's
+possible another client has leased the lock in the meantime.
+
+To be more specific, maintaining a clock is useful because it is possible that
+client A leased the lock and was unable to release the lock before the lock
+expired. If client B leased the lock before client A could release it, client A
+should not be able to release the lock (it's possible client B is still working
+and also client A should know that it no longer has exclusive access to the lock
+and may need to take cleanup actions). The server can determine this by
+comparing the logical clock value whenever a client attempts to release a lock.
+In this case, when client B leased the lock, the server incremented the clock
+value to one more than the clock value client A had when it leased the lock.
+Then when client A attempts to release the lock, the server will see that A's
+clock is behind and will let client A know that it could not release the lock by
+returning an `UnreleasableError` to client A. This allows client A to know it
+did not have exclusive access to the lock since it did not release the lock
+within the expiration time it requested when it leased the lock.
+
+The clock value on the lock can also be used by clients when writing data. It
+can provide a way to resolve write orders when two workers both acquired the
+same lock after a slow client A did not release the lock before it expired, and
+yet both clients attempt to write data to the same resource. Writes can be
+resolved by using the write value that is associated with a higher lock value,
+since the client with the higher lock value must be associated with the worker
+that has the most recent lease on the lock.
