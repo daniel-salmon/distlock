@@ -4,11 +4,12 @@ Implements a distributed lock client and server.
 This is particularly useful for situations where you need efficiency gains when
 running tasks in a distributed environment, yet it is not catastrophic if
 multiple workers attempt to run the same task at the same time. If you have a
-workload that requires at most one worker to run a task at a time, you should
-use a different distributed lock implementation. Unfortunately, this project
-does not use replication / consensus on the backend, so if the server is
-unavailable, there is no fallback mechanism since there is only one server. Put
-differently, you should not use this for mission critical workloads.
+workload that *requires* at most one worker to run a task at a time and it
+cannot tolerate anything less, you should use a different distributed lock
+implementation. Unfortunately, this project does not use replication / consensus
+on the backend, so if the server is unavailable, there is no fallback mechanism
+since there is only one server. Put differently, you should not use this for
+mission critical workloads.
 
 # Table of Contents
 
