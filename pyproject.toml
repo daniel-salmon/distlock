@@ -23,9 +23,12 @@ dev = [
     "pytest-randomly>=3.16.0",
 ]
 
+[project.scripts]
+distlock = "distlock.__main__:app"
+
 [tool.ruff]
 force-exclude = true
 exclude = ["distlock/stubs/*"]
 
-[tool.setuptools.packages.find]
-include = ["distlock"]
+[tool.setuptools]
+packages = ["distlock", "distlock.stubs"]
